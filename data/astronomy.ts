@@ -84,54 +84,15 @@ export interface MeteorShower {
   zenithRatePerHour: number;
   constellation: string;
   speed: number;
+  visibility: string;
 }
 
 export const meteorShowers: MeteorShower[] = [
-  { id: 'quadrantids', name: 'Quadrantids', peakDate: '2024-01-04', duration: 2, zenithRatePerHour: 120, constellation: 'Boötes', speed: 41 },
-  { id: 'lyrids', name: 'Lyrids', peakDate: '2024-04-22', duration: 3, zenithRatePerHour: 18, constellation: 'Lyra', speed: 49 },
-  { id: 'perseids', name: 'Perseids', peakDate: '2024-08-12', duration: 5, zenithRatePerHour: 100, constellation: 'Perseus', speed: 61 },
-  { id: 'orionids', name: 'Orionids', peakDate: '2024-10-21', duration: 3, zenithRatePerHour: 20, constellation: 'Orion', speed: 66 },
-  { id: 'leonids', name: 'Leonids', peakDate: '2024-11-17', duration: 3, zenithRatePerHour: 15, constellation: 'Leo', speed: 71 },
-  { id: 'geminids', name: 'Geminids', peakDate: '2024-12-14', duration: 4, zenithRatePerHour: 150, constellation: 'Gemini', speed: 35 }
+  { id: 'quadrantids', name: 'Quadrantids', peakDate: '2024-01-04', duration: 2, zenithRatePerHour: 120, constellation: 'Boötes', speed: 41, visibility: 'Good (Crescent Moon)' },
+  { id: 'lyrids', name: 'Lyrids', peakDate: '2024-04-22', duration: 3, zenithRatePerHour: 18, constellation: 'Lyra', speed: 49, visibility: 'Excellent (New Moon)' },
+  { id: 'perseids', name: 'Perseids', peakDate: '2024-08-12', duration: 5, zenithRatePerHour: 100, constellation: 'Perseus', speed: 61, visibility: 'Excellent (New Moon)' },
+  { id: 'orionids', name: 'Orionids', peakDate: '2024-10-21', duration: 3, zenithRatePerHour: 20, constellation: 'Orion', speed: 66, visibility: 'Fair (Quarter Moon)' },
+  { id: 'leonids', name: 'Leonids', peakDate: '2024-11-17', duration: 3, zenithRatePerHour: 15, constellation: 'Leo', speed: 71, visibility: 'Poor (Full Moon)' },
+  { id: 'geminids', name: 'Geminids', peakDate: '2024-12-14', duration: 4, zenithRatePerHour: 150, constellation: 'Gemini', speed: 35, visibility: 'Excellent (New Moon)' }
 ];
 
-export interface NearEarthObject {
-  id: string;
-  name: string;
-  diameter: number;
-  velocity: number;
-  missDistance: number;
-  approachDate: string;
-  hazardous: boolean;
-}
-
-export const nearEarthObjects: NearEarthObject[] = [
-  { id: 'neo-1', name: '2024 DW', diameter: 0.083, velocity: 8.47, missDistance: 1200000, approachDate: '2024-06-15', hazardous: false },
-  { id: 'neo-2', name: '2024 EF', diameter: 0.156, velocity: 12.3, missDistance: 850000, approachDate: '2024-06-18', hazardous: false },
-  { id: 'neo-3', name: 'Apophis', diameter: 0.37, velocity: 30.73, missDistance: 20000000, approachDate: '2029-04-13', hazardous: true }
-];
-
-export interface SpaceLaunch {
-  id: string;
-  name: string;
-  provider: string;
-  rocket: string;
-  location: string;
-  launchDate: string;
-  status: 'scheduled' | 'ongoing' | 'completed';
-}
-
-export const upcomingLaunches: SpaceLaunch[] = [
-  { id: 'launch-1', name: 'Starlink Mission', provider: 'SpaceX', rocket: 'Falcon 9', location: 'Kennedy Space Center', launchDate: '2024-06-20', status: 'scheduled' },
-  { id: 'launch-2', name: 'Artemis III', provider: 'NASA', rocket: 'SLS', location: 'Kennedy Space Center', launchDate: '2025-09-01', status: 'scheduled' }
-];
-
-export const auroraKpIndex = { level: 3, probability: 0.15, description: 'Minor geomagnetic storm', forecast: 'Aurora may be visible at high latitudes' };
-
-export const mockAPOD = {
-  date: '2024-06-17',
-  title: 'The Cosmic Horsehead',
-  explanation: 'One of the most identifiable nebulae in the sky is the Horsehead Nebula in Orion. This dark nebula is visible because its obscuring dust is silhouetted against another, brighter nebula.',
-  url: 'https://apod.nasa.gov/apod/image/2406/Horsehead_HubbleShoestring_960.jpg',
-  copyright: 'NASA, ESA, Hubble'
-};

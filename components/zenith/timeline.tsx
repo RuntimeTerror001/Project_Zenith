@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
 import { X, Rocket, Telescope, Moon, Globe, Star, Sun } from 'lucide-react';
+import Image from 'next/image';
 
 const timelineEvents = [
   {
@@ -11,10 +12,22 @@ const timelineEvents = [
     subtitle: 'First Moon Landing',
     icon: Moon,
     color: '#f4d59e',
-    description: 'On July 20, 1969, astronauts Neil Armstrong and Buzz Aldrin became the first humans to walk on the Moon. "One small step for man, one giant leap for mankind."',
-    image: 'https://images.pexels.com/photos/11566/astronomy-moon-lunar-night-11566.jpeg?auto=compress&cs=tinysrgb&w=800',
+    description: 'On July 20, 1969, astronauts Neil Armstrong and Buzz Aldrin became the first humans to walk on the Moon, marking a monumental achievement in human history.',
+    image: 'https://images-assets.nasa.gov/image/as11-40-5875/as11-40-5875~orig.jpg',
     facts: ['612 kg of Moon rocks collected', '3 crew: Armstrong, Aldrin, Collins', '8 days total mission duration'],
     celestial: 'Moon at closest approach (perigee) — 356,500 km',
+    category: 'Historic',
+  },
+  {
+    year: 1977,
+    title: 'Voyager 1',
+    subtitle: 'Interstellar Messenger',
+    icon: Globe,
+    color: '#a5c7f7',
+    description: 'Launched to explore the outer Solar System, Voyager 1 became the first human-made object to enter interstellar space, carrying the Golden Record message to potential alien civilizations.',
+    image: 'https://images-assets.nasa.gov/image/PIA17049/PIA17049~orig.jpg',
+    facts: ['Carries the Golden Record message', 'First spacecraft in interstellar space', 'Furthest human-made object from Earth'],
+    celestial: 'Heliosphere boundary crossed at 121 AU from the Sun',
     category: 'Historic',
   },
   {
@@ -23,10 +36,22 @@ const timelineEvents = [
     subtitle: 'Eyes of Humanity',
     icon: Telescope,
     color: '#6b93d6',
-    description: 'The Hubble Space Telescope launched into low Earth orbit and has since transformed our understanding of the universe, capturing images of billions of galaxies.',
-    image: 'https://images.pexels.com/photos/816608/pexels-photo-816608.jpeg?auto=compress&cs=tinysrgb&w=800',
+    description: 'The Hubble Space Telescope launched into low Earth orbit and has since transformed our understanding of the universe, capturing deep-field images of billions of galaxies.',
+    image: 'https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001591/GSFC_20171208_Archive_e001591~orig.jpg',
     facts: ['1.3 million observations made', '600 km orbit altitude', '13.7 billion ly deepest view'],
     celestial: 'Orbiting at 547 km — crossing your sky every 97 minutes',
+    category: 'Milestone',
+  },
+  {
+    year: 2021,
+    title: 'James Webb Telescope (JWST)',
+    subtitle: 'Infrared Space Observatory',
+    icon: Telescope,
+    color: '#ffdd00',
+    description: 'Launched to succeed Hubble, the James Webb Space Telescope uses infrared sensors to peer through cosmic dust to view the first stars and galaxies formed in the universe.',
+    image: 'https://images-assets.nasa.gov/image/GSFC_20220712_JWST_001/GSFC_20220712_JWST_001~orig.jpg',
+    facts: ['6.5m gold-coated primary mirror', 'Orbits at Sun-Earth Lagrange Point 2 (L2)', 'Infrared sensors view first stars & galaxies'],
+    celestial: '1.5 million km from Earth — cooler than -223°C to detect faint heat',
     category: 'Milestone',
   },
   {
@@ -35,46 +60,22 @@ const timelineEvents = [
     subtitle: 'India on the Moon',
     icon: Rocket,
     color: '#ff9933',
-    description: "India's Chandrayaan-3 successfully soft-landed near the Moon's south pole on August 23, 2023, making India the fourth country to land on the Moon.",
-    image: 'https://images.pexels.com/photos/2159/flight-sky-earth-space.jpg?auto=compress&cs=tinysrgb&w=800',
+    description: "India's Chandrayaan-3 successfully soft-landed near the Moon's south pole on August 23, 2023, making India the first nation to land in this resource-rich polar region.",
+    image: 'https://upload.wikimedia.org/wikipedia/commons/5/5f/Chandrayaan-3_Integrated_Module_in_clean-room_01.webp',
     facts: ['Moon south pole first landing', 'Vikram lander + Pragyan rover', '14 Earth days mission life'],
     celestial: 'Moon south pole — permanently shadowed craters hide ancient ice',
     category: 'Historic',
   },
   {
-    year: 2026,
-    title: 'Present Day',
-    subtitle: 'You Are Here',
+    year: 2028,
+    title: 'Artemis & Beyond',
+    subtitle: 'Multiplanetary Future',
     icon: Star,
     color: '#00e5ff',
-    description: "Right now, 7 astronauts orbit Earth aboard the ISS at 28,000 km/h. Hundreds of satellites watch our planet. The Webb Telescope peers at the universe's first light.",
-    image: 'https://images.pexels.com/photos/586687/pexels-photo-586687.jpeg?auto=compress&cs=tinysrgb&w=800',
-    facts: ['7 ISS crew members', '9,000+ active satellites', 'Webb sees 13.6B year old light'],
-    celestial: 'ISS overhead right now — look up tonight!',
-    category: 'Present',
-  },
-  {
-    year: 2027,
-    title: 'Solar Eclipse',
-    subtitle: 'Path of Totality',
-    icon: Sun,
-    color: '#fbbf24',
-    description: 'On August 2, 2027 a total solar eclipse will cast a shadow across Egypt, Saudi Arabia, and Somalia. The longest solar eclipse this century at 6 minutes 23 seconds.',
-    image: 'https://images.pexels.com/photos/9469853/pexels-photo-9469853.jpeg?auto=compress&cs=tinysrgb&w=800',
-    facts: ['6 min 23 sec totality', 'Visible across Africa & Arabia', '400x Moon-to-Sun size ratio'],
-    celestial: 'Moon & Sun aligned perfectly — corona visible to naked eye',
-    category: 'Upcoming',
-  },
-  {
-    year: 2035,
-    title: "Halley's Comet",
-    subtitle: 'Once in a Lifetime',
-    icon: Globe,
-    color: '#a5c7f7',
-    description: "Halley's Comet will make its next perihelion passage in 2061, but will become naked-eye visible beginning 2035. Last seen in 1986, its tail spans 100 million km.",
-    image: 'https://images.pexels.com/photos/1169754/pexels-photo-1169754.jpeg?auto=compress&cs=tinysrgb&w=800',
-    facts: ['75–76 year orbital period', '15×8 km nucleus size', '240,000 km/h at perihelion'],
-    celestial: "Comet visible in Gemini constellation at magnitude 2.5",
+    description: "NASA's Artemis program plans to establish a sustainable human presence on the Moon as a stepping stone for future crewed exploration of Mars.",
+    image: 'https://images-assets.nasa.gov/image/NHQ202211160021/NHQ202211160021~orig.jpg',
+    facts: ['Land first woman and person of color on Moon', 'Lunar Gateway space station foundation', 'Preparing for human exploration of Mars'],
+    celestial: 'Establishing deep space gateway and Martian transit trajectory',
     category: 'Future',
   },
 ];
@@ -98,7 +99,6 @@ export function TimelineJourney() {
     offset: ['start end', 'end start']
   });
 
-  // Smooth spring for line animation
   const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 20 });
 
   useEffect(() => {
@@ -122,7 +122,7 @@ export function TimelineJourney() {
             Journey Through <span className="gradient-text">Time</span>
           </h2>
           <p className="text-lg text-white/50 max-w-2xl mx-auto">
-            From Apollo to the future — explore humanity's greatest cosmic milestones.
+            From Apollo to the future — explore humanity&apos;s greatest cosmic milestones.
           </p>
         </motion.div>
       </div>
@@ -197,9 +197,11 @@ export function TimelineJourney() {
                         className="relative overflow-hidden rounded-xl flex-shrink-0"
                         style={{ width: 88, height: 88 }}
                       >
-                        <img
+                        <Image
                           src={event.image}
                           alt={event.title}
+                          fill
+                          sizes="88px"
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
                         <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${event.color}50, transparent)` }} />
@@ -309,9 +311,11 @@ export function TimelineJourney() {
                 initial={{ scale: 1 }}
                 whileHover={{ scale: 1.03 }}
               >
-                <img
+                <Image
                   src={selectedEvent.image}
                   alt={selectedEvent.title}
+                  fill
+                  sizes="(max-width: 640px) 100vw, 576px"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />

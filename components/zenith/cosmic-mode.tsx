@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Volume2, VolumeX, Maximize } from 'lucide-react';
+import { useZenithStore } from '@/store/zenith-store';
 
 function CosmicCanvas({ width, height }: { width: number; height: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -54,15 +55,14 @@ function CosmicCanvas({ width, height }: { width: number; height: number }) {
       [[10,100],[20,120],[35,140],[40,130],[50,140],[60,150],[65,140],[65,100],[45,60],[30,48],[20,45],[10,44],[10,100]],
     ];
 
+    const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     const animate = () => {
-      frame++;
       ctx.clearRect(0, 0, width, height);
 
-      // Deep space
       ctx.fillStyle = '#020617';
       ctx.fillRect(0, 0, width, height);
 
-      // Nebula
       const nb = ctx.createRadialGradient(cx * 0.4, cy * 0.5, 0, cx, cy, radius * 2.5);
       nb.addColorStop(0, 'rgba(124,58,237,0.1)');
       nb.addColorStop(0.5, 'rgba(0,100,200,0.05)');
@@ -70,38 +70,37 @@ function CosmicCanvas({ width, height }: { width: number; height: number }) {
       ctx.fillStyle = nb;
       ctx.fillRect(0, 0, width, height);
 
-      // Stars
       const t = frame * 0.01;
       stars.forEach((s) => {
-        const alpha = 0.3 + 0.5 * (0.5 + 0.5 * Math.sin(t + s.twinkle));
+        const alpha = prefersReducedMotion ? 0.6 : 0.3 + 0.5 * (0.5 + 0.5 * Math.sin(t + s.twinkle));
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(200,220,255,${alpha})`;
         ctx.fill();
       });
 
-      // Shooting stars
-      if (frame % 120 === 0 && shootStars.length < 3) {
-        const angle = 0.5 + Math.random() * 0.3;
-        shootStars.push({ x: Math.random() * width * 0.7, y: Math.random() * cy * 0.5, vx: Math.cos(angle) * 12, vy: Math.sin(angle) * 12, length: 100, opacity: 1 });
-      }
-      shootStars = shootStars.filter((ss) => {
-        ss.x += ss.vx; ss.y += ss.vy; ss.opacity -= 0.018;
-        if (ss.opacity > 0) {
-          const grad = ctx.createLinearGradient(ss.x, ss.y, ss.x - ss.vx / ss.length * 100, ss.y - ss.vy / ss.length * 100);
-          grad.addColorStop(0, `rgba(180,240,255,${ss.opacity})`);
-          grad.addColorStop(1, 'transparent');
-          ctx.beginPath();
-          ctx.moveTo(ss.x, ss.y);
-          ctx.lineTo(ss.x - ss.vx * 8, ss.y - ss.vy * 8);
-          ctx.strokeStyle = grad;
-          ctx.lineWidth = 2;
-          ctx.stroke();
+      if (!prefersReducedMotion) {
+        if (frame % 120 === 0 && shootStars.length < 3) {
+          const angle = 0.5 + Math.random() * 0.3;
+          shootStars.push({ x: Math.random() * width * 0.7, y: Math.random() * cy * 0.5, vx: Math.cos(angle) * 12, vy: Math.sin(angle) * 12, length: 100, opacity: 1 });
         }
-        return ss.opacity > 0;
-      });
+        shootStars = shootStars.filter((ss) => {
+          ss.x += ss.vx; ss.y += ss.vy; ss.opacity -= 0.018;
+          if (ss.opacity > 0) {
+            const grad = ctx.createLinearGradient(ss.x, ss.y, ss.x - ss.vx / ss.length * 100, ss.y - ss.vy / ss.length * 100);
+            grad.addColorStop(0, `rgba(180,240,255,${ss.opacity})`);
+            grad.addColorStop(1, 'transparent');
+            ctx.beginPath();
+            ctx.moveTo(ss.x, ss.y);
+            ctx.lineTo(ss.x - ss.vx * 8, ss.y - ss.vy * 8);
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+          return ss.opacity > 0;
+        });
+      }
 
-      // Earth
       ctx.save();
       ctx.beginPath();
       ctx.arc(cx, cy, radius, 0, Math.PI * 2);
@@ -114,7 +113,6 @@ function CosmicCanvas({ width, height }: { width: number; height: number }) {
       ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
       ctx.restore();
 
-      // Continents
       ctx.fillStyle = 'rgba(32,160,80,0.4)';
       ctx.strokeStyle = 'rgba(60,200,100,0.5)';
       ctx.lineWidth = 0.6;
@@ -132,8 +130,7 @@ function CosmicCanvas({ width, height }: { width: number; height: number }) {
         ctx.stroke();
       });
 
-      // Aurora-like glow at poles
-      const auroraAlpha = 0.15 + 0.1 * Math.sin(frame * 0.02);
+      const auroraAlpha = prefersReducedMotion ? 0.15 : 0.15 + 0.1 * Math.sin(frame * 0.02);
       const northPole = latLngToScreen(90, 0);
       if (northPole.visible) {
         const ag = ctx.createRadialGradient(northPole.x, northPole.y, 0, northPole.x, northPole.y, 80);
@@ -146,7 +143,6 @@ function CosmicCanvas({ width, height }: { width: number; height: number }) {
         ctx.fill();
       }
 
-      // Atmosphere
       const atmoGrd = ctx.createRadialGradient(cx, cy, radius * 0.92, cx, cy, radius * 1.2);
       atmoGrd.addColorStop(0, 'rgba(0,100,200,0.3)');
       atmoGrd.addColorStop(0.4, 'rgba(0,150,255,0.12)');
@@ -156,7 +152,6 @@ function CosmicCanvas({ width, height }: { width: number; height: number }) {
       ctx.fillStyle = atmoGrd;
       ctx.fill();
 
-      // Bloom
       const bloomGrd = ctx.createRadialGradient(cx, cy, radius, cx, cy, radius * 1.8);
       bloomGrd.addColorStop(0, 'rgba(20,80,180,0.1)');
       bloomGrd.addColorStop(1, 'transparent');
@@ -165,7 +160,6 @@ function CosmicCanvas({ width, height }: { width: number; height: number }) {
       ctx.fillStyle = bloomGrd;
       ctx.fill();
 
-      // ISS orbit line
       ctx.strokeStyle = 'rgba(255,215,0,0.4)';
       ctx.lineWidth = 1.5;
       ctx.setLineDash([3, 5]);
@@ -191,7 +185,6 @@ function CosmicCanvas({ width, height }: { width: number; height: number }) {
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // ISS dot
       const issLx = Math.cos(issAngle);
       const issLy = Math.sin(issAngle) * Math.cos(inc);
       const issLz = Math.sin(issAngle) * Math.sin(inc);
@@ -215,20 +208,26 @@ function CosmicCanvas({ width, height }: { width: number; height: number }) {
         ctx.fill();
       }
 
-      rotY += 0.003;
-      animId = requestAnimationFrame(animate);
+      if (!prefersReducedMotion) {
+        frame++;
+        rotY += 0.003;
+        animId = requestAnimationFrame(animate);
+      }
     };
 
     animate();
-    return () => cancelAnimationFrame(animId);
+    return () => {
+      if (animId) cancelAnimationFrame(animId);
+    };
   }, [width, height]);
 
   return <canvas ref={canvasRef} className="w-full h-full" style={{ display: 'block' }} />;
 }
 
 export function CosmicMode() {
-  const [isActive, setIsActive] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const { mode, setMode, soundEnabled, toggleSound, music } = useZenithStore();
+  const isActive = mode === 'cosmic';
+  const setIsActive = (active: boolean) => setMode(active ? 'cosmic' : 'live');
   const [size, setSize] = useState({ w: 0, h: 0 });
 
   useEffect(() => {
@@ -239,11 +238,11 @@ export function CosmicMode() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsActive(false);
+      if (e.key === 'Escape') setMode('live');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [setMode]);
 
   return (
     <>
@@ -277,10 +276,12 @@ export function CosmicMode() {
               className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4"
             >
               <div className="flex items-center gap-3 px-6 py-3 rounded-2xl" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setIsMuted((m) => !m)} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
-                  {isMuted ? <VolumeX className="w-4 h-4 text-white/50" /> : <Volume2 className="w-4 h-4 text-cyan-400" />}
+                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={toggleSound} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
+                  {soundEnabled ? <Volume2 className="w-4 h-4 text-cyan-400" /> : <VolumeX className="w-4 h-4 text-white/50" />}
                 </motion.button>
-                <span className="text-white/50 text-sm">Ambient Music</span>
+                <span className="text-white/50 text-sm">
+                  {soundEnabled ? (music.track || 'Ambient Music') : 'Ambient Music (Muted)'}
+                </span>
                 <div className="w-px h-5 bg-white/20" />
                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsActive(false)} className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
                   <X className="w-4 h-4 text-white/60" />

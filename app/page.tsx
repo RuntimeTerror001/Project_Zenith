@@ -1,27 +1,76 @@
 "use client";
 
+import { useEffect } from 'react';
 import { HeroSection } from '@/components/zenith/hero';
 import { ISSLiveCard } from '@/components/zenith/iss-tracker';
 import { TimeMachine } from '@/components/zenith/time-machine';
 import { CommandPalette } from '@/components/zenith/command-palette';
 import { LocationPicker } from '@/components/zenith/location-picker';
-import { PlanetExplorer } from '@/components/zenith/planets';
-import { ConstellationViewer } from '@/components/zenith/constellations';
-import { MeteorShowerCalendar } from '@/components/zenith/meteors';
-import { APODSection, SpaceNews } from '@/components/zenith/apod';
 import { InteractiveGlobe } from '@/components/zenith/globe';
-import { TimelineJourney } from '@/components/zenith/timeline';
 import { AISpaceAssistant } from '@/components/zenith/ai-assistant';
 import { CosmicMode } from '@/components/zenith/cosmic-mode';
 import { StarfieldBackground, FloatingOrbs, FloatingParticles, Aurora, CursorGlow } from '@/components/effects/starfield';
 import { CountUp, FadeInView } from '@/components/zenith/micro-interactions';
 import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/utils';
 import { Satellite, Star, Telescope, Zap } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { useZenithStore } from '@/store/zenith-store';
+import { AuthModal } from '@/components/layout/auth-modal';
+
+const SectionSkeleton = () => <section className="relative px-4 py-32"><div className="skeleton mx-auto h-96 max-w-6xl rounded-3xl" /></section>;
+const TimelineJourney = dynamic(() => import('@/components/zenith/timeline').then((module) => module.TimelineJourney), { loading: SectionSkeleton });
+const PlanetExplorer = dynamic(() => import('@/components/zenith/planets').then((module) => module.PlanetExplorer), { loading: SectionSkeleton });
+const ConstellationViewer = dynamic(() => import('@/components/zenith/constellations').then((module) => module.ConstellationViewer), { loading: SectionSkeleton });
+const MeteorShowerCalendar = dynamic(() => import('@/components/zenith/meteors').then((module) => module.MeteorShowerCalendar), { loading: SectionSkeleton });
+const APODSection = dynamic(() => import('@/components/zenith/apod').then((module) => module.APODSection), { loading: SectionSkeleton });
+const SpaceNews = dynamic(() => import('@/components/zenith/apod').then((module) => module.SpaceNews), { loading: SectionSkeleton });
+
+// Dynamically import SkyView and SkyObjectPanel
+const SkyView = dynamic(() => import('@/components/zenith/sky-view').then((module) => module.SkyView), { loading: SectionSkeleton });
+const SkyObjectPanel = dynamic(() => import('@/components/zenith/sky-view').then((module) => module.SkyObjectPanel), { ssr: false });
+const BackgroundMusicManager = dynamic(() => import('@/components/audio/background-music'), { ssr: false });
 
 export default function Home() {
+  const { location, setLocation, currentDate, setDate } = useZenithStore();
+
+  // 1. Initial State parsing from URL on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const latParam = params.get('lat');
+    const lngParam = params.get('lng');
+    const dateParam = params.get('date');
+
+    if (latParam && lngParam) {
+      const lat = parseFloat(latParam);
+      const lng = parseFloat(lngParam);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        setLocation({ lat, lng, name: `Station (${lat.toFixed(2)}°, ${lng.toFixed(2)}°)` });
+      }
+    }
+
+    if (dateParam) {
+      const parsedDate = new Date(dateParam);
+      if (!isNaN(parsedDate.getTime())) {
+        setDate(parsedDate);
+      }
+    }
+  }, [setLocation, setDate]);
+
+  // 2. Synchronize store state back to URL parameters silently (using replaceState to avoid next.js router overhead)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('lat', location.lat.toFixed(5));
+    url.searchParams.set('lng', location.lng.toFixed(5));
+    url.searchParams.set('date', currentDate.toISOString());
+    window.history.replaceState(null, '', url.toString());
+  }, [location.lat, location.lng, currentDate]);
+
   return (
     <main className="relative min-h-screen">
+      <BackgroundMusicManager />
       {/* Background layers */}
       <StarfieldBackground />
       <FloatingOrbs />
@@ -89,6 +138,10 @@ export default function Home() {
       {/* Planets */}
       <PlanetExplorer />
 
+      {/* Sky Map Section */}
+      <SkyView />
+      <SkyObjectPanel />
+
       {/* Constellations */}
       <ConstellationViewer />
 
@@ -130,7 +183,7 @@ export default function Home() {
           </div>
           <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-white/10">
             <div className="text-sm text-white/30 mb-4 md:mb-0">Made with passion for the cosmos. Data from NASA, ESA, CelesTrak.</div>
-            <div className="text-sm text-white/30">Project Zenith 2024 &bull; The Celestial Eye</div>
+            <div className="text-sm text-white/30">Project Zenith {new Date().getFullYear()} &bull; The Celestial Eye</div>
           </div>
         </div>
       </footer>
@@ -139,6 +192,7 @@ export default function Home() {
       <TimeMachine />
       <CommandPalette />
       <LocationPicker />
+      <AuthModal />
 
       {/* Floating UI */}
       <AISpaceAssistant />

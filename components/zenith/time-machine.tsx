@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Play, Pause, SkipBack, SkipForward, History } from 'lucide-react';
-import { useZenithStore, useUIStore } from '@/stores/zenith';
-import { cn, formatDate, celestialEvents } from '@/lib/utils';
+import { useZenithStore, useUIStore } from '@/store/zenith-store';
+import { cn, formatDate, celestialEvents } from '@/utils/utils';
 
 export function TimeMachine() {
   const { isTimeMachineOpen, toggleTimeMachine } = useUIStore();

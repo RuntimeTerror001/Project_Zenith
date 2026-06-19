@@ -381,7 +381,6 @@
     transform: scale(0.96) !important;
   }
 
-  /* Magnetic hover placeholder - JS handles actual effect */
   .magnetic {
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }

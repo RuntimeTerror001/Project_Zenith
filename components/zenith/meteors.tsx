@@ -2,11 +2,11 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
-import { meteorShowers, nearEarthObjects, upcomingLaunches, auroraKpIndex } from '@/data/astronomy';
-import { Sparkles, Asterisk, Rocket, AlertTriangle, Gauge, MapPin, TrendingUp, Radio, Zap } from 'lucide-react';
-import { cn, formatDate } from '@/lib/utils';
+import { meteorShowers } from '@/data/astronomy';
+import { useLiveSpaceEvents } from '@/hooks/use-astronomy-queries';
+import { Sparkles, Asterisk, Rocket, AlertTriangle, Gauge, MapPin, TrendingUp, Radio, Zap, Globe } from 'lucide-react';
+import { cn, formatDate } from '@/utils/utils';
 
-// Animated count-up component
 function AnimatedCount({ end, suffix = '', duration = 2 }: { end: number; suffix?: string; duration?: number }) {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
@@ -28,7 +28,6 @@ function AnimatedCount({ end, suffix = '', duration = 2 }: { end: number; suffix
   return <span ref={ref}>{count}{suffix}</span>;
 }
 
-// Sparkle animation for hover
 function SparkleEffect({ active }: { active: boolean }) {
   if (!active) return null;
   return (
@@ -56,7 +55,12 @@ function SparkleEffect({ active }: { active: boolean }) {
 }
 
 export function MeteorShowerCalendar() {
+  const { data: liveEvents } = useLiveSpaceEvents();
+  const nearEarthObjects = liveEvents?.nearEarthObjects ?? [];
+  const upcomingLaunches = liveEvents?.upcomingLaunches ?? [];
+  const auroraKpIndex = liveEvents?.auroraKpIndex ?? { level: 0, probability: 0, description: 'Loading live geomagnetic conditions', forecast: 'Connecting to NOAA space weather data.' };
   const [hoveredShower, setHoveredShower] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'launches' | 'cosmic'>('launches');
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
   return (
@@ -163,8 +167,13 @@ export function MeteorShowerCalendar() {
                     <AnimatedCount end={shower.zenithRatePerHour} suffix="/hr" />
                   </div>
 
-                  <div className="text-sm text-white/50 mb-4">
+                  <div className="text-sm text-white/50 mb-2">
                     Peak: {months[peakMonth]} {parseInt(shower.peakDate.split('-')[2])}
+                  </div>
+
+                  <div className="text-xs text-yellow-400/80 mb-4 font-semibold flex items-center gap-1.5 justify-start">
+                    <Sparkles className="w-3.5 h-3.5 fill-current" />
+                    <span>Visibility: {shower.visibility}</span>
                   </div>
 
                   <div className="flex items-center gap-4 text-xs text-white/40">
@@ -253,58 +262,117 @@ export function MeteorShowerCalendar() {
           </div>
         </motion.div>
 
-        {/* Upcoming Launches */}
+        {/* Upcoming Launches & Cosmic Events Switcher */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="glass-card rounded-3xl p-6"
+          className="glass-card rounded-3xl p-6 flex flex-col justify-between"
         >
-          <div className="flex items-center gap-3 mb-6">
-            <motion.div
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
-              style={{
-                background: 'linear-gradient(135deg, #7c3aed, #06b6d4)',
-              }}
-              whileHover={{ scale: 1.1 }}
-            >
-              <Rocket className="w-6 h-6 text-white" />
-            </motion.div>
-            <div>
-              <h3 className="text-lg font-bold text-white">Upcoming Launches</h3>
-              <p className="text-sm text-white/40">Space missions around the world</p>
+          <div>
+            <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/10">
+              <div className="flex bg-white/5 p-1 rounded-xl gap-1">
+                <button
+                  onClick={() => setActiveTab('launches')}
+                  className={cn(
+                    "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 flex items-center gap-1.5",
+                    activeTab === 'launches'
+                      ? "bg-purple-600 text-white shadow-md"
+                      : "text-white/60 hover:text-white"
+                  )}
+                >
+                  <Rocket className="w-3.5 h-3.5" />
+                  <span>Launch Manifest</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('cosmic')}
+                  className={cn(
+                    "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 flex items-center gap-1.5",
+                    activeTab === 'cosmic'
+                      ? "bg-cyan-500 text-slate-950 font-bold shadow-md"
+                      : "text-white/60 hover:text-white"
+                  )}
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>Cosmic Events</span>
+                </button>
+              </div>
+              <p className="text-xs text-white/40 hidden sm:block">Space Bulletin</p>
             </div>
-          </div>
 
-          <div className="space-y-3">
-            {upcomingLaunches.map((launch, index) => (
-              <motion.div
-                key={launch.id}
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ scale: 1.02, x: -5 }}
-                className="p-4 rounded-xl bg-white/5 hover:bg-white/8 transition-all cursor-pointer group"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-white group-hover:text-purple-300 transition-colors">{launch.name}</span>
-                  <span className={cn(
-                    "px-2.5 py-1 rounded-full text-xs font-medium",
-                    launch.status === 'scheduled'
-                      ? "bg-blue-500/20 text-blue-400"
-                      : "bg-white/10 text-white/40"
-                  )}>
-                    {launch.status}
-                  </span>
-                </div>
-                <div className="text-xs text-white/50 mb-2">{launch.provider} | {launch.rocket}</div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-white/30">{launch.location}</span>
-                  <span className="text-cyan-400">{formatDate(new Date(launch.launchDate))}</span>
-                </div>
-              </motion.div>
-            ))}
+            {activeTab === 'launches' ? (
+              <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1 custom-scrollbar">
+                {upcomingLaunches.map((launch, index) => (
+                  <motion.div
+                    key={launch.id}
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ scale: 1.02, x: -5 }}
+                    className="p-4 rounded-xl bg-white/5 hover:bg-white/8 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-white group-hover:text-purple-300 transition-colors text-left">{launch.name}</span>
+                      <span className={cn(
+                        "px-2.5 py-1 rounded-full text-xs font-medium flex-shrink-0",
+                        launch.status === 'scheduled'
+                          ? "bg-blue-500/20 text-blue-400"
+                          : "bg-white/10 text-white/40"
+                      )}>
+                        {launch.status}
+                      </span>
+                    </div>
+                    <div className="text-xs text-white/50 mb-2 text-left">{launch.provider} | {launch.rocket}</div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-white/30 truncate max-w-[200px] text-left">{launch.location}</span>
+                      <span className="text-cyan-400">{formatDate(new Date(launch.launchDate))}</span>
+                    </div>
+                  </motion.div>
+                ))}
+                {upcomingLaunches.length === 0 && (
+                  <div className="text-center py-12 text-sm text-white/45">No upcoming launches scheduled.</div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1 custom-scrollbar">
+                {(liveEvents?.spaceEvents ?? []).map((event, index) => (
+                  <motion.div
+                    key={event.id}
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ scale: 1.02, x: -5 }}
+                    className="p-4 rounded-xl bg-white/5 hover:bg-white/8 transition-all cursor-pointer group text-left"
+                  >
+                    <div className="flex items-center justify-between mb-2 gap-2">
+                      <span className="font-medium text-white group-hover:text-cyan-300 transition-colors text-left">{event.name}</span>
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider flex-shrink-0",
+                        event.type === 'eclipse' && "bg-amber-500/20 text-amber-400 border border-amber-500/30",
+                        event.type === 'comet' && "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30",
+                        event.type === 'conjunction' && "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                      )}>
+                        {event.type}
+                      </span>
+                    </div>
+                    <p className="text-xs text-white/50 mb-3 leading-relaxed text-left">{event.description}</p>
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/5 text-[10px] text-white/40">
+                      <div className="text-left">
+                        <span className="block text-white/30 font-medium">Visibility</span>
+                        <span className="text-white/60 truncate block">{event.visibility}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="block text-white/30 font-medium">Date</span>
+                        <span className="text-cyan-400 font-semibold">{formatDate(new Date(event.date))}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+                {(liveEvents?.spaceEvents ?? []).length === 0 && (
+                  <div className="text-center py-12 text-sm text-white/45">No cosmic events scheduled.</div>
+                )}
+              </div>
+            )}
           </div>
         </motion.div>
 

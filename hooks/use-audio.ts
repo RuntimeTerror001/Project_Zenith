@@ -1,45 +1,54 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Howl } from 'howler';
-import { useZenithStore } from '@/stores/zenith';
+import { useZenithStore } from '@/store/zenith-store';
 
 export function useAudio() {
-  const [isMuted, setIsMuted] = useState(true);
-  const [ambientMusic, setAmbientMusic] = useState<Howl | null>(null);
   const { soundEnabled, toggleSound } = useZenithStore();
-
-  useEffect(() => {
-    // Initialize ambient music (would need actual audio file)
-    // For now, just track volume state
-    return () => {
-      ambientMusic?.unload();
-    };
-  }, []);
+  const isMuted = !soundEnabled;
+  const setIsMuted = useCallback((muted: boolean) => {
+    if (muted === soundEnabled) {
+      toggleSound();
+    }
+  }, [soundEnabled, toggleSound]);
 
   const playHover = useCallback(() => {
-    if (!soundEnabled || isMuted) return;
-    // Play hover sound
-    new Howl({
-      src: ['/audio/hover.mp3'],
-      volume: 0.1,
-      rate: 1 + Math.random() * 0.1
-    }).play();
-  }, [soundEnabled, isMuted]);
+    if (!soundEnabled) return;
+    playTone([600], 'sine', 0.05, 0.012);
+  }, [soundEnabled]);
 
   const playClick = useCallback(() => {
-    if (!soundEnabled || isMuted) return;
-    new Howl({
-      src: ['/audio/click.mp3'],
-      volume: 0.15
-    }).play();
-  }, [soundEnabled, isMuted]);
+    if (!soundEnabled) return;
+    playTone([1000], 'sine', 0.04, 0.04);
+  }, [soundEnabled]);
 
   const playSuccess = useCallback(() => {
-    if (!soundEnabled || isMuted) return;
-    new Howl({
-      src: ['/audio/success.mp3'],
-      volume: 0.2
-    }).play();
-  }, [soundEnabled, isMuted]);
+    if (!soundEnabled) return;
+    if (typeof window === 'undefined') return;
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const notes = [523.25, 659.25, 783.99, 987.77];
+      notes.forEach((freq, idx) => {
+        const time = ctx.currentTime + idx * 0.06;
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, time);
+        gainNode.gain.setValueAtTime(0, time);
+        gainNode.gain.linearRampToValueAtTime(0.04, time + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, time + 0.4);
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        osc.start(time);
+        osc.stop(time + 0.5);
+      });
+      setTimeout(() => {
+        ctx.close().catch(() => {});
+      }, 1000);
+    } catch {
+      // Fail silently
+    }
+  }, [soundEnabled]);
 
   return {
     isMuted,
@@ -51,7 +60,7 @@ export function useAudio() {
   };
 }
 
-export function useIntersectionObserver(options: IntersectionObserverInit) {
+export function useIntersectionObserver({ threshold, rootMargin, root }: IntersectionObserverInit = {}) {
   const [ref, setRef] = useState<Element | null>(null);
   const [isIntersecting, setIsIntersecting] = useState(false);
 
@@ -60,12 +69,12 @@ export function useIntersectionObserver(options: IntersectionObserverInit) {
 
     const observer = new IntersectionObserver(
       ([entry]) => setIsIntersecting(entry.isIntersecting),
-      options
+      { threshold, rootMargin, root }
     );
 
     observer.observe(ref);
     return () => observer.disconnect();
-  }, [ref, options.threshold, options.rootMargin]);
+  }, [ref, threshold, rootMargin, root]);
 
   return { ref: useCallback((el: Element | null) => setRef(el), [setRef]), isIntersecting };
 }
@@ -240,4 +249,90 @@ export function useIsFirstRender() {
   }, []);
 
   return isFirstRender.current;
+}
+
+export const playTone = (freqs: number[], type: OscillatorType, duration: number, volume: number) => {
+  if (typeof window === 'undefined') return;
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    
+    const ctx = new AudioContext();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+    const dest = ctx.destination;
+    
+    const gainNode = ctx.createGain();
+    gainNode.gain.setValueAtTime(0, ctx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.005);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+    
+    gainNode.connect(dest);
+    
+    freqs.forEach((freq) => {
+      const osc = ctx.createOscillator();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      
+      if (type === 'sine' && freqs.length === 1) {
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.3, ctx.currentTime + duration);
+      }
+      
+      osc.connect(gainNode);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    });
+    
+    setTimeout(() => {
+      ctx.close().catch(() => {});
+    }, duration * 1000 + 100);
+  } catch (error) {
+    // Fail silently
+  }
+};
+
+export function GlobalAudioFeedback() {
+  const { soundEnabled } = useZenithStore();
+
+  useEffect(() => {
+    if (!soundEnabled || typeof window === 'undefined') return;
+
+    let lastHoveredElement: HTMLElement | null = null;
+
+    const playHoverSound = () => {
+      playTone([600], 'sine', 0.05, 0.012);
+    };
+
+    const playClickSound = () => {
+      playTone([1000], 'sine', 0.04, 0.04);
+    };
+
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest('button, a, [role="button"], input[type="range"], [data-interactive]');
+      if (target && target !== lastHoveredElement) {
+        lastHoveredElement = target as HTMLElement;
+        playHoverSound();
+      } else if (!target) {
+        lastHoveredElement = null;
+      }
+    };
+
+    const handleClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest('button, a, [role="button"], input[type="range"], [data-interactive]');
+      if (target) {
+        playClickSound();
+      }
+    };
+
+    document.addEventListener('mouseover', handleMouseOver);
+    document.addEventListener('click', handleClick);
+
+    return () => {
+      document.removeEventListener('mouseover', handleMouseOver);
+      document.removeEventListener('click', handleClick);
+    };
+  }, [soundEnabled]);
+
+  return null;
 }

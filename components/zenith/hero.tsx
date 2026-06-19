@@ -36,7 +36,6 @@ export function HeroSection() {
   const scale = useTransform(scrollY, [0, 500], [1, 0.9]);
   const y = useTransform(scrollY, [0, 500], [0, 100]);
 
-  // Mouse parallax
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
   const mxSpring = useSpring(mx, { stiffness: 50, damping: 20 });
@@ -44,7 +43,6 @@ export function HeroSection() {
 
   const heroRef = useRef<HTMLElement>(null);
 
-  // Mouse movement for parallax and cursor glow
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       if (!heroRef.current) return;
@@ -65,7 +63,6 @@ export function HeroSection() {
   const parallaxX3 = useTransform(mxSpring, [-0.5, 0.5], [-15, 15]);
   const parallaxY3 = useTransform(mySpring, [-0.5, 0.5], [-15, 15]);
 
-  // Shooting stars - every 8-12 seconds
   useEffect(() => {
     const spawnShootingStar = () => {
       const x = Math.random() * 80 + 10;
@@ -80,7 +77,6 @@ export function HeroSection() {
     return () => clearInterval(interval);
   }, []);
 
-  // Typewriter effect cycling through phrases
   useEffect(() => {
     const phrase = typedPhrases[phraseIndex];
     let timeout: ReturnType<typeof setTimeout>;
@@ -101,7 +97,6 @@ export function HeroSection() {
     return () => clearTimeout(timeout);
   }, [typedText, isDeleting, phraseIndex]);
 
-  // Cursor blink
   useEffect(() => {
     const timer = setInterval(() => setShowCursor((s) => !s), 530);
     return () => clearInterval(timer);

@@ -1,30 +1,22 @@
 "use client";
 
-import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Satellite, Users, Gauge, MapPin, Radio } from 'lucide-react';
-import { useISSStore } from '@/stores/zenith';
-import { cn, formatSpeed, formatDistance } from '@/lib/utils';
+import { cn, formatSpeed, formatDistance } from '@/utils/utils';
+import { useIssPosition } from '@/hooks/use-astronomy-queries';
 
 export function ISSLiveCard() {
-  const { altitude, velocity, visibility, crewCount } = useISSStore();
-  const [currentPos, setCurrentPos] = useState({ lat: 0, lng: 0 });
-
-  useEffect(() => {
-    const updatePosition = () => {
-      const now = Date.now();
-      const angle = ((now % 5568000) / 5568000) * 2 * Math.PI;
-      setCurrentPos({ lat: Math.sin(angle) * 51.6, lng: ((angle * 180 / Math.PI) % 360) - 180 });
-    };
-    updatePosition();
-    const timer = setInterval(updatePosition, 1000);
-    return () => clearInterval(timer);
-  }, []);
+  const { data, isPending, isError, refetch } = useIssPosition();
+  if (isPending) return <div className="glass-card h-[440px] animate-pulse rounded-3xl" role="status" aria-label="Loading live ISS position" />;
+  if (isError) return <div className="glass-card flex h-[440px] flex-col items-center justify-center rounded-3xl p-6 text-center"><p className="text-white/60">Live ISS signal is temporarily unavailable.</p><button className="btn-primary mt-4" onClick={() => void refetch()}>Reconnect</button></div>;
+  const { altitude, visibility } = data;
+  const velocity = data.velocity / 3600;
+  const currentPos = { lat: data.latitude, lng: data.longitude };
 
   const statItems = [
     { icon: Gauge, label: 'Speed', value: formatSpeed(velocity), color: 'text-cyan-400' },
     { icon: MapPin, label: 'Altitude', value: formatDistance(altitude), color: 'text-purple-400' },
-    { icon: Users, label: 'Crew', value: `${crewCount} Astronauts`, color: 'text-green-400' },
+    { icon: Users, label: 'Crew', value: 'Live manifest', color: 'text-green-400' },
     { icon: Radio, label: 'Visibility', value: visibility === 'daylight' ? 'Daylight' : 'Night', color: visibility === 'daylight' ? 'text-yellow-400' : 'text-blue-400' }
   ];
 

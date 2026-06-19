@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
 
 export function StarfieldBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -14,6 +14,7 @@ export function StarfieldBackground() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let animationId: number;
 
     interface Star {
@@ -135,7 +136,7 @@ export function StarfieldBackground() {
       stars.forEach((star) => {
         // More realistic twinkling
         const twinkleSpeed = star.speed * 1.5;
-        const twinkle = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * twinkleSpeed + star.twinkleOffset));
+        const twinkle = prefersReducedMotion ? 0.75 : 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * twinkleSpeed + star.twinkleOffset));
         const a = star.opacity * twinkle;
 
         // Parallax based on layer
@@ -177,7 +178,7 @@ export function StarfieldBackground() {
       });
 
       // Spawn shooting stars more frequently - every 8-12 seconds
-      if (frameCount % 500 === 0 && shootingStars.length < 3) {
+      if (!prefersReducedMotion && frameCount % 500 === 0 && shootingStars.length < 3) {
         spawnShootingStar();
       }
 
@@ -251,7 +252,9 @@ export function StarfieldBackground() {
         return ss.opacity > 0 && ss.x < canvas.width + 200;
       });
 
-      animationId = requestAnimationFrame(animate);
+      if (!prefersReducedMotion) {
+        animationId = requestAnimationFrame(animate);
+      }
     };
 
     resize();
@@ -306,6 +309,9 @@ export function FloatingParticles() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
 
     let animId: number;
 
@@ -387,6 +393,8 @@ export function FloatingParticles() {
 }
 
 export function FloatingOrbs() {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
       {/* Reduced opacity for premium subtle effect */}
@@ -396,7 +404,7 @@ export function FloatingOrbs() {
           background: 'radial-gradient(circle, rgba(124, 58, 237, 0.12), transparent 70%)',
           filter: 'blur(80px)',
         }}
-        animate={{ x: [0, 60, 0], y: [0, 30, 0], scale: [1, 1.05, 1] }}
+        animate={shouldReduceMotion ? undefined : { x: [0, 60, 0], y: [0, 30, 0], scale: [1, 1.05, 1] }}
         transition={{ duration: 30, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
@@ -405,7 +413,7 @@ export function FloatingOrbs() {
           background: 'radial-gradient(circle, rgba(0, 229, 255, 0.08), transparent 70%)',
           filter: 'blur(60px)',
         }}
-        animate={{ x: [0, -50, 0], y: [0, 60, 0], scale: [1, 1.1, 1] }}
+        animate={shouldReduceMotion ? undefined : { x: [0, -50, 0], y: [0, 60, 0], scale: [1, 1.1, 1] }}
         transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
       />
       <motion.div
@@ -414,7 +422,7 @@ export function FloatingOrbs() {
           background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08), transparent 70%)',
           filter: 'blur(50px)',
         }}
-        animate={{ x: [0, 30, 0], y: [0, -40, 0], scale: [1, 1.15, 1] }}
+        animate={shouldReduceMotion ? undefined : { x: [0, 30, 0], y: [0, -40, 0], scale: [1, 1.15, 1] }}
         transition={{ duration: 28, repeat: Infinity, ease: 'easeInOut', delay: 8 }}
       />
     </div>
@@ -422,11 +430,13 @@ export function FloatingOrbs() {
 }
 
 export function Aurora() {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
       <motion.div
         className="absolute w-full h-full"
-        animate={{ rotate: [0, 360] }}
+        animate={shouldReduceMotion ? undefined : { rotate: [0, 360] }}
         transition={{ duration: 120, repeat: Infinity, ease: 'linear' }}
       >
         <div

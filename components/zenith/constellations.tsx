@@ -4,11 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { constellations } from '@/data/astronomy';
 import { Star, X, Calendar, Compass, Info, Sparkles, Eye, Moon, Sun } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/utils';
 
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-// Star map data per constellation (relative x,y positions 0-100 + connecting lines)
 const constellationMaps: Record<string, { stars: { x: number; y: number; size: number; name?: string; magnitude?: number }[]; lines: [number, number][] }> = {
   orion: {
     stars: [
@@ -129,14 +128,12 @@ function ConstellationCanvas({ id, isVisible }: { id: string; isVisible: boolean
       frame++;
       ctx.clearRect(0, 0, W, H);
 
-      // Deep space bg with gradient
       const bgGrad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H));
       bgGrad.addColorStop(0, '#0a0a1a');
       bgGrad.addColorStop(1, '#040812');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, W, H);
 
-      // Background micro-stars with twinkling - create depth
       const t = frame * 0.015;
       for (let i = 0; i < 80; i++) {
         const sx = ((i * 137.508 + 0.08 * i) % 100) / 100 * W;
@@ -149,7 +146,6 @@ function ConstellationCanvas({ id, isVisible }: { id: string; isVisible: boolean
         ctx.fill();
       }
 
-      // Draw connecting lines with animated glow
       const lineProgress = Math.min(1, frame / 70);
       ctx.strokeStyle = 'rgba(0, 229, 255, 0.4)';
       ctx.lineWidth = 1.5;
@@ -157,7 +153,6 @@ function ConstellationCanvas({ id, isVisible }: { id: string; isVisible: boolean
       ctx.shadowBlur = 4;
 
       map.lines.forEach(([a, b], idx) => {
-        // Stagger line reveal
         const lineStart = idx * 0.08;
         const progress = Math.max(0, Math.min(1, (lineProgress - lineStart) * 1.5));
 
@@ -175,7 +170,6 @@ function ConstellationCanvas({ id, isVisible }: { id: string; isVisible: boolean
       });
       ctx.shadowBlur = 0;
 
-      // Draw stars with premium effects
       map.stars.forEach((star, i) => {
         const revealProgress = Math.min(1, frame / 40);
         const sx = star.x / 100 * W;
@@ -184,7 +178,6 @@ function ConstellationCanvas({ id, isVisible }: { id: string; isVisible: boolean
         const alpha = revealProgress * twinkle;
         const r = star.size;
 
-        // Outer glow - multiple layers for depth
         const outerGlow = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 8);
         outerGlow.addColorStop(0, `rgba(220, 240, 255, ${alpha * 0.5})`);
         outerGlow.addColorStop(0.3, `rgba(180, 220, 255, ${alpha * 0.25})`);
@@ -195,7 +188,6 @@ function ConstellationCanvas({ id, isVisible }: { id: string; isVisible: boolean
         ctx.arc(sx, sy, r * 8, 0, Math.PI * 2);
         ctx.fill();
 
-        // Inner glow
         const innerGlow = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 3);
         innerGlow.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
         innerGlow.addColorStop(0.4, `rgba(200, 230, 255, ${alpha * 0.7})`);
@@ -205,13 +197,11 @@ function ConstellationCanvas({ id, isVisible }: { id: string; isVisible: boolean
         ctx.arc(sx, sy, r * 3, 0, Math.PI * 2);
         ctx.fill();
 
-        // Star core
         ctx.beginPath();
         ctx.arc(sx, sy, r * 0.9, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
         ctx.fill();
 
-        // Star name with magnitude indication
         if (star.name && frame > 50) {
           ctx.fillStyle = `rgba(150, 220, 255, ${alpha * 0.9})`;
           ctx.font = `${Math.max(10, r * 2.2)}px Inter, sans-serif`;
@@ -219,7 +209,6 @@ function ConstellationCanvas({ id, isVisible }: { id: string; isVisible: boolean
           const textY = sy + 4;
           ctx.fillText(star.name, textX, textY);
 
-          // Show magnitude as size hint
           if (star.magnitude) {
             ctx.fillStyle = `rgba(255, 200, 100, ${alpha * 0.6})`;
             ctx.font = `9px Inter, sans-serif`;

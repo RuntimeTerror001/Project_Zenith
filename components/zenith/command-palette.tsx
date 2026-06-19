@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Command } from 'cmdk';
 import { Search, Globe, Satellite, MapPin, Clock, Settings, HelpCircle, Sparkles, X, ArrowRight, Flame } from 'lucide-react';
-import { useUIStore, useZenithStore } from '@/stores/zenith';
+import { useUIStore, useZenithStore } from '@/store/zenith-store';
 import { planets, constellations, meteorShowers } from '@/data/astronomy';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/utils';
 
 const actions = [
   { id: 'explore-iss', label: 'Track ISS Live', icon: Satellite, category: 'Satellites' },

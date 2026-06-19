@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { planets, Planet } from '@/data/astronomy';
 import { X, Orbit, MapPin, Clock, Gauge, Thermometer, Moon, RotateCw, Wind, CloudSun } from 'lucide-react';
-import { cn, formatDistance } from '@/lib/utils';
+import { cn, formatDistance } from '@/utils/utils';
 
 const planetExtras: Record<string, { temp: string; fact: string; atmosphere: string; composition: string }> = {
   mercury: { temp: '-180 to 430°C', fact: 'A year on Mercury lasts only 88 Earth days', atmosphere: 'Virtually none - exosphere only', composition: 'Iron core (70% metal)' },

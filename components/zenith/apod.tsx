@@ -1,21 +1,25 @@
 "use client";
 
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { mockAPOD } from '@/data/astronomy';
+import { useApod, useSpaceNews } from '@/hooks/use-astronomy-queries';
 import { Calendar, User, ExternalLink, ZoomIn, Globe, Rocket, Telescope, Eye } from 'lucide-react';
 import { useRef, useState } from 'react';
+import Image from 'next/image';
 
-const FALLBACK_IMAGE = 'https://images.pexels.com/photos/1169754/pexels-photo-1169754.jpeg?auto=compress&cs=tinysrgb&w=1200';
+const MotionImage = motion.create(Image);
 
 export function APODSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const [imgError, setImgError] = useState(false);
+  const { data: apod, isPending, isError, refetch } = useApod();
 
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start end', 'end start'] });
   const imgScale = useTransform(scrollYProgress, [0, 0.5, 1], [1.1, 1.15, 1.1]);
   const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
   const parallaxY = useTransform(scrollYProgress, [0, 1], ['-6%', '6%']);
+
+  if (isPending) return <section id="apod" className="relative px-4 py-32"><div className="skeleton mx-auto aspect-video max-w-6xl rounded-3xl" role="status" aria-label="Loading NASA picture of the day" /></section>;
+  if (isError) return <section id="apod" className="relative px-4 py-32 text-center"><p className="text-white/60">NASA&apos;s picture is temporarily unavailable.</p><button className="btn-primary mt-5" onClick={() => void refetch()}>Try again</button></section>;
 
   return (
     <section ref={containerRef} id="apod" className="relative py-32 px-4 overflow-hidden">
@@ -39,7 +43,7 @@ export function APODSection() {
             viewport={{ once: true }}
             className="text-4xl md:text-5xl font-bold text-white mb-4"
           >
-            {mockAPOD.title}
+            {apod.title}
           </motion.h2>
           <motion.div
             initial={{ opacity: 0 }}
@@ -49,12 +53,12 @@ export function APODSection() {
           >
             <span className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-cyan-400" />
-              {mockAPOD.date}
+              {apod.date}
             </span>
-            {mockAPOD.copyright && (
+            {apod.copyright && (
               <span className="flex items-center gap-2">
                 <User className="w-4 h-4 text-purple-400" />
-                {mockAPOD.copyright}
+                {apod.copyright}
               </span>
             )}
           </motion.div>
@@ -71,10 +75,11 @@ export function APODSection() {
         >
           {/* Parallax image container */}
           <div className="relative aspect-video overflow-hidden rounded-3xl">
-            <motion.img
-              src={imgError ? FALLBACK_IMAGE : mockAPOD.url}
-              alt={mockAPOD.title}
-              onError={() => setImgError(true)}
+            <MotionImage
+              src={apod.url}
+              alt={apod.title}
+              width={1200}
+              height={675}
               className="w-full h-full object-cover"
               style={{ scale: imgScale, y: parallaxY }}
               loading="lazy"
@@ -130,11 +135,11 @@ export function APODSection() {
                     animate={{ opacity: isHovered ? 0 : 1, y: isHovered ? 10 : 0 }}
                     className="text-white/80 text-sm md:text-base leading-relaxed line-clamp-3"
                   >
-                    {mockAPOD.explanation}
+                    {apod.explanation}
                   </motion.p>
                 </div>
                 <motion.a
-                  href={mockAPOD.url}
+                  href={apod.hdurl ?? apod.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
@@ -157,69 +162,12 @@ export function APODSection() {
           viewport={{ once: true }}
           className="mt-10 max-w-3xl mx-auto text-center"
         >
-          <p className="text-lg text-white/60 leading-relaxed">{mockAPOD.explanation}</p>
+          <p className="text-lg text-white/60 leading-relaxed">{apod.explanation}</p>
         </motion.div>
       </motion.div>
     </section>
   );
 }
-
-const newsArticles = [
-  {
-    title: "NASA's Artemis Program Advances Human Moon Exploration",
-    source: 'NASA',
-    date: '2024-06-15',
-    category: 'Exploration',
-    color: '#00e5ff',
-    image: 'https://images.pexels.com/photos/2159/flight-sky-earth-space.jpg?auto=compress&cs=tinysrgb&w=600',
-    excerpt: 'Artemis III will land the first woman and next man on the Moon near the lunar south pole.',
-  },
-  {
-    title: 'SpaceX Starlink Reaches 5000 Satellites Milestone',
-    source: 'SpaceNews',
-    date: '2024-06-14',
-    category: 'Satellites',
-    color: '#7c3aed',
-    image: 'https://images.pexels.com/photos/586687/pexels-photo-586687.jpeg?auto=compress&cs=tinysrgb&w=600',
-    excerpt: 'The mega-constellation continues to expand global internet coverage across underserved regions.',
-  },
-  {
-    title: 'James Webb Telescope Captures New Pillars of Creation Image',
-    source: 'ESA',
-    date: '2024-06-13',
-    category: 'Observation',
-    color: '#f59e0b',
-    image: 'https://images.pexels.com/photos/816608/pexels-photo-816608.jpeg?auto=compress&cs=tinysrgb&w=600',
-    excerpt: "Webb's infrared vision reveals never-before-seen protostars embedded in the stellar nursery.",
-  },
-  {
-    title: 'Martian Dust Devils Captured by Perseverance Rover',
-    source: 'JPL',
-    date: '2024-06-12',
-    category: 'Mars',
-    color: '#ef4444',
-    image: 'https://images.pexels.com/photos/39561/solar-flare-sun-eruption-energy-39561.jpeg?auto=compress&cs=tinysrgb&w=600',
-    excerpt: 'Towering dust vortices reaching over 100 meters tall spotted in Jezero Crater.',
-  },
-  {
-    title: 'New Exoplanet Found in Habitable Zone of Nearby Star',
-    source: 'Nature',
-    date: '2024-06-11',
-    category: 'Exoplanets',
-    color: '#10b981',
-    image: 'https://images.pexels.com/photos/1169754/pexels-photo-1169754.jpeg?auto=compress&cs=tinysrgb&w=600',
-    excerpt: 'Kepler-452b analogue discovered just 40 light-years away with conditions similar to early Earth.',
-  },
-  {
-    title: 'Solar Flare Triggers Spectacular Aurora Display',
-    source: 'NOAA',
-    date: '2024-06-10',
-    category: 'Solar',
-    color: '#a855f7',
-    image: 'https://images.pexels.com/photos/1819650/pexels-photo-1819650.jpeg?auto=compress&cs=tinysrgb&w=600',
-    excerpt: 'X2.3 class solar flare produces visible auroras as far south as Texas and Spain.',
-  },
-];
 
 const categoryIcons: Record<string, typeof Globe> = {
   Exploration: Rocket,
@@ -231,6 +179,10 @@ const categoryIcons: Record<string, typeof Globe> = {
 };
 
 export function SpaceNews() {
+  const { data, isPending, isError, refetch } = useSpaceNews();
+  const liveArticles = data?.map((item, index) => ({ title: item.title, source: item.newsSite, date: new Date(item.publishedAt).toLocaleDateString('en-CA'), category: 'Exploration', color: ['#00e5ff', '#7c3aed', '#f59e0b', '#ef4444', '#10b981', '#a855f7'][index % 6] ?? '#00e5ff', image: item.imageUrl, excerpt: item.summary, url: item.url })) ?? [];
+  if (isPending) return <section id="news" className="relative px-4 py-32"><div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 md:grid-cols-3">{[0, 1, 2].map((item) => <div key={item} className="skeleton h-96 rounded-2xl" />)}</div></section>;
+  if (isError) return <section id="news" className="relative px-4 py-32 text-center"><p className="text-white/60">Space news is temporarily unavailable.</p><button className="btn-primary mt-5" onClick={() => void refetch()}>Try again</button></section>;
   return (
     <section id="news" className="relative py-32 px-4 overflow-hidden">
       <div className="absolute inset-0 nebula opacity-20 pointer-events-none" />
@@ -257,10 +209,10 @@ export function SpaceNews() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {newsArticles.map((item, index) => {
+          {liveArticles.map((item, index) => {
             const Icon = categoryIcons[item.category] || Globe;
             return (
-              <motion.article
+              <motion.article onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
                 key={item.title}
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -283,9 +235,11 @@ export function SpaceNews() {
 
                 {/* Thumbnail with parallax effect */}
                 <div className="relative h-48 overflow-hidden">
-                  <motion.img
+                  <MotionImage
                     src={item.image}
                     alt={item.title}
+                    width={600}
+                    height={384}
                     className="w-full h-full object-cover"
                     loading="lazy"
                     whileHover={{ scale: 1.1 }}

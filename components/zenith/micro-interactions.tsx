@@ -95,7 +95,6 @@ export function FadeInView({ children, delay = 0, className = '' }: {
   );
 }
 
-// Stagger children animation wrapper
 export function StaggerContainer({ children, className = '', staggerDelay = 0.1 }: {
   children: React.ReactNode;
   className?: string;
@@ -129,7 +128,6 @@ export const staggerItem = {
   },
 };
 
-// Magnetic hover effect wrapper
 export function MagneticButton({ children, className = '' }: {
   children: React.ReactNode;
   className?: string;
@@ -169,7 +167,6 @@ export function MagneticButton({ children, className = '' }: {
   );
 }
 
-// Animated counter with easing
 export function AnimatedCounter({
   value,
   duration = 1.5,
@@ -198,7 +195,6 @@ export function AnimatedCounter({
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / (duration * 1000), 1);
 
-      // Smooth easing
       const eased = 1 - Math.pow(1 - progress, 3);
       const current = eased * value;
 
@@ -220,7 +216,6 @@ export function AnimatedCounter({
   );
 }
 
-// Parallax effect wrapper
 export function ParallaxLayer({
   children,
   speed = 0.5,
@@ -255,7 +250,6 @@ export function ParallaxLayer({
   );
 }
 
-// Glow effect on hover
 export function GlowOnHover({ children, glowColor = 'rgba(124, 58, 237, 0.4)' }: {
   children: React.ReactNode;
   glowColor?: string;
@@ -279,7 +273,6 @@ export function GlowOnHover({ children, glowColor = 'rgba(124, 58, 237, 0.4)' }:
   );
 }
 
-// Scale on tap with spring
 export function Tappable({ children, scale = 0.95 }: {
   children: React.ReactNode;
   scale?: number;
