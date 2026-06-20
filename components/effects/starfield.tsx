@@ -43,6 +43,8 @@ export function StarfieldBackground() {
         twinkleOffset: Math.random() * Math.PI * 2,
         layer: Math.random() < 0.3 ? 2 : Math.random() < 0.6 ? 1 : 0,
       }));
+      // Sort once by layer for depth (not every frame)
+      stars.sort((a, b) => a.layer - b.layer);
     };
 
     const spawnShootingStar = () => {
@@ -129,9 +131,6 @@ export function StarfieldBackground() {
 
       // Twinkling stars - premium effect
       const t = Date.now() * 0.001;
-
-      // Sort by layer for depth
-      stars.sort((a, b) => a.layer - b.layer);
 
       stars.forEach((star) => {
         // More realistic twinkling
@@ -270,17 +269,22 @@ export function StarfieldBackground() {
 }
 
 export function CursorGlow() {
-  const [pos, setPos] = useState({ x: -999, y: -999 });
-  const [visible, setVisible] = useState(false);
+  const glowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      setPos({ x: e.clientX, y: e.clientY });
-      setVisible(true);
-    };
-    const onLeave = () => setVisible(false);
+    const el = glowRef.current;
+    if (!el) return;
 
-    window.addEventListener('mousemove', onMove);
+    const onMove = (e: MouseEvent) => {
+      el.style.left = `${e.clientX}px`;
+      el.style.top = `${e.clientY}px`;
+      el.style.opacity = '1';
+    };
+    const onLeave = () => {
+      el.style.opacity = '0';
+    };
+
+    window.addEventListener('mousemove', onMove, { passive: true });
     document.addEventListener('mouseleave', onLeave);
     return () => {
       window.removeEventListener('mousemove', onMove);
@@ -290,12 +294,13 @@ export function CursorGlow() {
 
   return (
     <div
+      ref={glowRef}
       className="cursor-glow"
       style={{
-        left: pos.x,
-        top: pos.y,
-        opacity: visible ? 1 : 0,
-        transition: 'opacity 0.4s ease, left 0.15s ease, top 0.15s ease',
+        left: -999,
+        top: -999,
+        opacity: 0,
+        transition: 'opacity 0.4s ease',
       }}
     />
   );

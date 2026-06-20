@@ -15,6 +15,8 @@ const nextConfig = {
   async rewrites() {
     return [
       {
+        // Next.js App Router API routes (e.g. /api/satellites) take precedence over rewrites.
+        // Only unmatched /api/* routes fall through to the Express backend.
         source: '/api/:path*',
         destination: 'http://localhost:5001/api/:path*',
       },

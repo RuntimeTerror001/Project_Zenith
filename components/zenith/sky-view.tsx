@@ -32,6 +32,10 @@ export function SkyView() {
   const [viewMode, setViewMode] = useState<'all' | 'planets' | 'stars' | 'constellations'>('all');
   const [loading, setLoading] = useState(true);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const [mounted, setMounted] = useState(false);
+
+  // Mark as mounted to avoid hydration mismatches from date-dependent positions
+  useEffect(() => { setMounted(true); }, []);
 
   // Handle window resizing
   useEffect(() => {
@@ -308,7 +312,7 @@ export function SkyView() {
       />
 
       {/* Interactive HUD Overlays (Planets and Brightest Stars buttons) */}
-      <div className="absolute inset-0 pointer-events-none">
+      {mounted && <div className="absolute inset-0 pointer-events-none">
         {/* Planets */}
         {(viewMode === 'all' || viewMode === 'planets') &&
           visiblePlanets.map((p) => {
@@ -348,7 +352,7 @@ export function SkyView() {
               </button>
             );
           })}
-      </div>
+      </div>}
 
       {/* View Mode Tabs */}
       <div className="absolute top-4 left-4 z-10 flex gap-2">

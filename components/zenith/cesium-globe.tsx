@@ -48,6 +48,15 @@ export default function CesiumGlobe() {
   const [selectedSat, setSelectedSat] = useState<SelectedInfo | null>(null);
   const [trackingMode, setTrackingMode] = useState<'free' | 'iss' | 'selected'>('free');
 
+  // Keep a ref copy of selectedSat to avoid re-registering the preRender callback on every update
+  const selectedSatRef = useRef<SelectedInfo | null>(null);
+  const trackingModeRef = useRef<'free' | 'iss' | 'selected'>('free');
+  const lastInfoUpdateRef = useRef<number>(0);
+
+  // Sync refs with state
+  useEffect(() => { selectedSatRef.current = selectedSat; }, [selectedSat]);
+  useEffect(() => { trackingModeRef.current = trackingMode; }, [trackingMode]);
+
   // References for live entity updating
   const satellitesDataRef = useRef<any[]>([]);
   const pointCollectionRef = useRef<Cesium.PointPrimitiveCollection | null>(null);
@@ -59,39 +68,58 @@ export default function CesiumGlobe() {
   const issOrbitRef = useRef<Cesium.Entity | null>(null);
   const selectedEntityRef = useRef<Cesium.Entity | null>(null);
 
-  // Fetch active satellites
+  // Fetch active satellites with retry logic
   useEffect(() => {
-    async function fetchSats() {
-      try {
-        const res = await fetch('/api/satellites');
-        if (!res.ok) throw new Error('Failed to load satellites');
-        const data = await res.json();
-        setSatellites(data);
+    let cancelled = false;
 
-        // Pre-parse TLE records for fast SGP4 calculation
-        const parsed = data.map((sat: SatelliteTle) => {
-          try {
-            const satrec = satellite.twoline2satrec(sat.tle1, sat.tle2);
-            return {
-              id: sat.id,
-              name: sat.name,
-              satrec,
-              isIss: sat.name.includes('ISS') || sat.name.includes('ZARYA'),
-            };
-          } catch {
-            return null;
+    async function fetchSats(retries = 3, delay = 2000) {
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          const res = await fetch('/api/satellites');
+          if (!res.ok) throw new Error(`Server returned ${res.status}`);
+          const data = await res.json();
+
+          // Guard: API may return an error object instead of array
+          if (!Array.isArray(data)) throw new Error('Invalid satellite data format');
+          if (cancelled) return;
+
+          setSatellites(data);
+
+          // Pre-parse TLE records for fast SGP4 calculation
+          const parsed = data.map((sat: SatelliteTle) => {
+            try {
+              const satrec = satellite.twoline2satrec(sat.tle1, sat.tle2);
+              return {
+                id: sat.id,
+                name: sat.name,
+                satrec,
+                isIss: sat.name.includes('ISS') || sat.name.includes('ZARYA'),
+              };
+            } catch {
+              return null;
+            }
+          }).filter(Boolean);
+
+          satellitesDataRef.current = parsed;
+          setLoading(false);
+          return; // Success — exit retry loop
+        } catch (err: any) {
+          console.warn(`Satellite fetch attempt ${attempt}/${retries} failed:`, err.message);
+          if (attempt < retries && !cancelled) {
+            await new Promise((r) => setTimeout(r, delay * attempt));
           }
-        }).filter(Boolean);
+        }
+      }
 
-        satellitesDataRef.current = parsed;
-        setLoading(false);
-      } catch (err: any) {
-        console.error(err);
+      // All retries exhausted
+      if (!cancelled) {
         setError('Unable to fetch live satellite data.');
         setLoading(false);
       }
     }
+
     fetchSats();
+    return () => { cancelled = true; };
   }, []);
 
   // Initialize Cesium Viewer
@@ -134,13 +162,14 @@ export default function CesiumGlobe() {
     }
     
     // Add CartoDB Dark Matter tiles for a premium night look
-    viewer.scene.imageryLayers.addImageryProvider(
-      new Cesium.UrlTemplateImageryProvider({
-        url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-        subdomains: ['a', 'b', 'c', 'd'],
-        credit: '© OpenStreetMap, © CARTO',
-      })
-    );
+    const cartoProvider = new Cesium.UrlTemplateImageryProvider({
+      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      subdomains: ['a', 'b', 'c', 'd'],
+      credit: '© OpenStreetMap, © CARTO',
+    });
+    const cartoLayer = viewer.scene.imageryLayers.addImageryProvider(cartoProvider);
+    // Suppress non-critical tile load errors from external CDN
+    cartoLayer.imageryProvider.errorEvent?.addEventListener(() => {});
 
     // Hide default Cesium bottom logo credits for neat UI look
     const creditContainer = viewer.bottomContainer as HTMLElement;
@@ -161,7 +190,7 @@ export default function CesiumGlobe() {
       position: Cesium.Cartesian3.fromDegrees(location.lng, location.lat, 0),
       point: {
         pixelSize: 12,
-        color: (Cesium.Color as any).fromCssString('#06b6d4'),
+        color: Cesium.Color.fromCssColorString('#06b6d4'),
         outlineColor: Cesium.Color.WHITE,
         outlineWidth: 2,
       },
@@ -183,7 +212,7 @@ export default function CesiumGlobe() {
       name: 'ISS (ZARYA)',
       point: {
         pixelSize: 14,
-        color: (Cesium.Color as any).fromCssString('#eab308'),
+        color: Cesium.Color.fromCssColorString('#eab308'),
         outlineColor: Cesium.Color.WHITE,
         outlineWidth: 2,
       },
@@ -191,7 +220,7 @@ export default function CesiumGlobe() {
         text: 'ISS',
         font: 'bold 11px Inter, sans-serif',
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-        fillColor: (Cesium.Color as any).fromCssString('#ffd700'),
+        fillColor: Cesium.Color.fromCssColorString('#ffd700'),
         outlineColor: Cesium.Color.BLACK,
         outlineWidth: 2,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
@@ -207,7 +236,7 @@ export default function CesiumGlobe() {
         positions: [],
         width: 2,
         material: new Cesium.PolylineDashMaterialProperty({
-          color: (Cesium.Color as any).fromCssString('rgba(234, 179, 8, 0.4)'),
+          color: Cesium.Color.fromCssColorString('rgba(234, 179, 8, 0.4)'),
           dashLength: 16.0,
         }),
       },
@@ -219,7 +248,7 @@ export default function CesiumGlobe() {
       name: 'Selected Object',
       point: {
         pixelSize: 16,
-        color: (Cesium.Color as any).fromCssString('#a855f7'),
+        color: Cesium.Color.fromCssColorString('#a855f7'),
         outlineColor: Cesium.Color.WHITE,
         outlineWidth: 2,
       },
@@ -335,6 +364,7 @@ export default function CesiumGlobe() {
     if (!viewer) return;
 
     let isDestroyed = false;
+    let lastSetSelectedTime = 0;
 
     // Pre-Render callback
     const updateSatellitesPositions = () => {
@@ -345,6 +375,8 @@ export default function CesiumGlobe() {
       const pointsMap = pointsMapRef.current;
       const pointCollection = pointCollectionRef.current;
       const parsedSats = satellitesDataRef.current;
+      const currentSelectedSat = selectedSatRef.current;
+      const currentTrackingMode = trackingModeRef.current;
 
       if (!pointCollection) return;
 
@@ -355,7 +387,7 @@ export default function CesiumGlobe() {
             if (sat.isIss) return;
             const point = pointCollection.add({
               pixelSize: 3,
-              color: (Cesium.Color as any).fromCssString('rgba(168, 85, 247, 0.75)'),
+              color: Cesium.Color.fromCssColorString('rgba(168, 85, 247, 0.75)'),
               id: sat.id,
             });
             pointsMap.set(sat.id, point);
@@ -393,19 +425,12 @@ export default function CesiumGlobe() {
 
         if (position && velocity && typeof position !== 'boolean' && typeof velocity !== 'boolean') {
           const posGd = satellite.eciToGeodetic(position, gmst);
-          const lat = radToDeg(posGd.latitude);
-          const lng = radToDeg(posGd.longitude);
           const alt = posGd.height;
-          const speed = Math.sqrt(
-            Math.pow(velocity.x, 2) +
-            Math.pow(velocity.y, 2) +
-            Math.pow(velocity.z, 2)
-          ) * 3600;
 
           const cartesian = Cesium.Cartesian3.fromRadians(posGd.longitude, posGd.latitude, alt * 1000);
           issEntityRef.current.position = new Cesium.ConstantPositionProperty(cartesian);
 
-          // Render ISS Orbit line (draw 1 complete orbit = 92 minutes, past 46 to future 46 min)
+          // Render ISS Orbit line
           if (issOrbitRef.current && issOrbitRef.current.polyline) {
             const orbitPoints: Cesium.Cartesian3[] = [];
             for (let offset = -46; offset <= 46; offset += 2) {
@@ -425,15 +450,15 @@ export default function CesiumGlobe() {
             }
           }
 
-          if (trackingMode === 'iss') {
+          if (currentTrackingMode === 'iss') {
             viewer.trackedEntity = issEntityRef.current;
           }
         }
       }
 
       // Propagate Selected Sat & Update info
-      if (selectedSat && selectedEntityRef.current) {
-        const selSatObj = parsedSats.find((s) => s.id === selectedSat.id);
+      if (currentSelectedSat && selectedEntityRef.current) {
+        const selSatObj = parsedSats.find((s) => s.id === currentSelectedSat.id);
         if (selSatObj) {
           const posVel = satellite.propagate(selSatObj.satrec, now);
           const position = posVel.position;
@@ -457,7 +482,7 @@ export default function CesiumGlobe() {
             }
             selectedEntityRef.current.show = true as any;
 
-            // Compute look angles relative to observer
+            // Compute look angles
             const observerGeodetic = {
               latitude: degToRad(location.lat),
               longitude: degToRad(location.lng),
@@ -468,7 +493,7 @@ export default function CesiumGlobe() {
             const az = radToDeg(lookAngles.azimuth);
             const el = radToDeg(lookAngles.elevation);
 
-            setSelectedSat({
+            const nextData = {
               id: selSatObj.id,
               name: selSatObj.name,
               lat,
@@ -479,28 +504,36 @@ export default function CesiumGlobe() {
               elevation: el,
               distance: lookAngles.rangeSat,
               isIss: false,
-            });
+            };
 
-            if (trackingMode === 'selected') {
+            // Throttled update to state — only once per second instead of every frame
+            if (now.getTime() - lastSetSelectedTime > 1000) {
+              setSelectedSat(nextData);
+              lastSetSelectedTime = now.getTime();
+            }
+            selectedSatRef.current = nextData;
+
+            if (currentTrackingMode === 'selected') {
               viewer.trackedEntity = selectedEntityRef.current;
             }
           }
         }
-      } else {
-        if (selectedEntityRef.current) {
-          selectedEntityRef.current.show = false as any;
-        }
+      } else if (selectedEntityRef.current) {
+        selectedEntityRef.current.show = false as any;
       }
     };
 
-    // Attach listener
     viewer.scene.preRender.addEventListener(updateSatellitesPositions);
 
     return () => {
       isDestroyed = true;
-      viewer.scene.preRender.removeEventListener(updateSatellitesPositions);
+      if (!viewer.isDestroyed()) {
+        viewer.scene.preRender.removeEventListener(updateSatellitesPositions);
+      }
     };
-  }, [showSatellites, selectedSat, trackingMode, location.lat, location.lng]);
+    // selectedSat and trackingMode accessed via refs to avoid re-registration loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showSatellites, location.lat, location.lng]);
 
   // Track buttons handling
   const handleTrackISS = () => {
