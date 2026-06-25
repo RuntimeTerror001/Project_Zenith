@@ -10,4 +10,8 @@ export const QUERY_KEYS = {
   apod: ['astronomy-picture-of-the-day'] as const,
   news: ['space-news'] as const,
   events: ['live-space-events'] as const,
+  timeline: ['timeline-events'] as const,
+  stats: ['astronomy-stats'] as const,
+  planets: ['planets-data'] as const,
+  settings: ['user-settings'] as const,
 } as const;

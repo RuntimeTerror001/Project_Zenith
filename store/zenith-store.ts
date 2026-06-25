@@ -86,8 +86,8 @@ export const useZenithStore = create<ZenithState>()(persist((set, get) => ({
   timeSpeed: 1,
   mode: 'live',
   selectedObject: null,
-  music: { enabled: false, volume: 0.5, track: null },
-  soundEnabled: false,
+  music: { enabled: true, volume: 0.5, track: 'Nebula Dreams' },
+  soundEnabled: true,
   isPlaying: true,
   showOrbits: true,
   showConstellations: true,
@@ -107,18 +107,87 @@ export const useZenithStore = create<ZenithState>()(persist((set, get) => ({
     const latitude = 'latitude' in location ? location.latitude : location.lat;
     const longitude = 'longitude' in location ? location.longitude : location.lng;
     set({ location: { ...location, latitude, longitude, lat: latitude, lng: longitude }, coordinates: { lat: latitude, lng: longitude } });
+    
+    const { token } = get();
+    if (token) {
+      void astronomyService.updateSettings({
+        locationName: location.name,
+        latitude,
+        longitude
+      }).catch(() => {});
+    }
   },
-  setCoordinates: (lat, lng) => set((state) => ({ coordinates: { lat, lng }, location: { ...state.location, latitude: lat, longitude: lng, lat, lng } })),
+  setCoordinates: (lat, lng) => {
+    set((state) => ({ coordinates: { lat, lng }, location: { ...state.location, latitude: lat, longitude: lng, lat, lng } }));
+    const { token, location } = get();
+    if (token) {
+      void astronomyService.updateSettings({
+        locationName: location.name || 'Custom Location',
+        latitude: lat,
+        longitude: lng
+      }).catch(() => {});
+    }
+  },
   setDate: (currentDate) => set({ currentDate }),
   setTimeSpeed: (timeSpeed) => set({ timeSpeed }),
   setMode: (mode) => set({ mode }),
   setSelectedObject: (selectedObject) => set({ selectedObject }),
-  setMusic: (settings) => set((state) => ({ music: { ...state.music, ...settings }, soundEnabled: settings.enabled ?? state.soundEnabled })),
+  setMusic: (settings) => {
+    set((state) => {
+      const newMusic = { ...state.music, ...settings };
+      const newSound = settings.enabled ?? state.soundEnabled;
+      
+      const { token } = get();
+      if (token) {
+        void astronomyService.updateSettings({
+          musicVolume: newMusic.volume,
+          soundEnabled: newSound
+        }).catch(() => {});
+      }
+      return { music: newMusic, soundEnabled: newSound };
+    });
+  },
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
-  toggleOrbits: () => set((state) => ({ showOrbits: !state.showOrbits })),
-  toggleConstellations: () => set((state) => ({ showConstellations: !state.showConstellations })),
-  toggleSatellites: () => set((state) => ({ showSatellites: !state.showSatellites })),
-  toggleSound: () => set((state) => ({ soundEnabled: !state.soundEnabled, music: { ...state.music, enabled: !state.soundEnabled } })),
+  toggleOrbits: () => {
+    set((state) => {
+      const nextVal = !state.showOrbits;
+      const { token } = get();
+      if (token) {
+        void astronomyService.updateSettings({ showOrbits: nextVal }).catch(() => {});
+      }
+      return { showOrbits: nextVal };
+    });
+  },
+  toggleConstellations: () => {
+    set((state) => {
+      const nextVal = !state.showConstellations;
+      const { token } = get();
+      if (token) {
+        void astronomyService.updateSettings({ showConstellations: nextVal }).catch(() => {});
+      }
+      return { showConstellations: nextVal };
+    });
+  },
+  toggleSatellites: () => {
+    set((state) => {
+      const nextVal = !state.showSatellites;
+      const { token } = get();
+      if (token) {
+        void astronomyService.updateSettings({ showSatellites: nextVal }).catch(() => {});
+      }
+      return { showSatellites: nextVal };
+    });
+  },
+  toggleSound: () => {
+    set((state) => {
+      const nextVal = !state.soundEnabled;
+      const { token } = get();
+      if (token) {
+        void astronomyService.updateSettings({ soundEnabled: nextVal }).catch(() => {});
+      }
+      return { soundEnabled: nextVal, music: { ...state.music, enabled: nextVal } };
+    });
+  },
   
   // Auth implementations
   setAuth: (user, token) => {
@@ -133,6 +202,29 @@ export const useZenithStore = create<ZenithState>()(persist((set, get) => ({
       }).catch(() => {});
       void astronomyService.getNotifications().then((list) => {
         set({ notifications: list });
+      }).catch(() => {});
+      void astronomyService.getSettings().then((settings) => {
+        if (settings) {
+          set({
+            soundEnabled: settings.soundEnabled,
+            music: {
+              enabled: settings.soundEnabled,
+              volume: settings.musicVolume ?? 0.5,
+              track: get().music.track
+            },
+            showOrbits: settings.showOrbits,
+            showConstellations: settings.showConstellations,
+            showSatellites: settings.showSatellites,
+            location: {
+              name: settings.locationName || 'Custom Location',
+              latitude: settings.latitude,
+              longitude: settings.longitude,
+              lat: settings.latitude,
+              lng: settings.longitude
+            },
+            coordinates: { lat: settings.latitude, lng: settings.longitude }
+          });
+        }
       }).catch(() => {});
     }
   },

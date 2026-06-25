@@ -1,6 +1,53 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useZenithStore } from '@/store/zenith-store';
 
+let hoverHowl: any = null;
+let clickHowl: any = null;
+
+const playHoverSoundFile = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    if (!hoverHowl) {
+      const { Howl } = require('howler');
+      hoverHowl = new Howl({
+        src: ['/audio/hover.mp3'],
+        volume: 0.25,
+        onloaderror: () => {
+          playTone([600], 'sine', 0.05, 0.012);
+        },
+        onplayerror: () => {
+          playTone([600], 'sine', 0.05, 0.012);
+        }
+      });
+    }
+    hoverHowl.play();
+  } catch {
+    playTone([600], 'sine', 0.05, 0.012);
+  }
+};
+
+const playClickSoundFile = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    if (!clickHowl) {
+      const { Howl } = require('howler');
+      clickHowl = new Howl({
+        src: ['/audio/click.mp3'],
+        volume: 0.35,
+        onloaderror: () => {
+          playTone([1000], 'sine', 0.04, 0.04);
+        },
+        onplayerror: () => {
+          playTone([1000], 'sine', 0.04, 0.04);
+        }
+      });
+    }
+    clickHowl.play();
+  } catch {
+    playTone([1000], 'sine', 0.04, 0.04);
+  }
+};
+
 export function useAudio() {
   const { soundEnabled, toggleSound } = useZenithStore();
   const isMuted = !soundEnabled;
@@ -12,12 +59,12 @@ export function useAudio() {
 
   const playHover = useCallback(() => {
     if (!soundEnabled) return;
-    playTone([600], 'sine', 0.05, 0.012);
+    playHoverSoundFile();
   }, [soundEnabled]);
 
   const playClick = useCallback(() => {
     if (!soundEnabled) return;
-    playTone([1000], 'sine', 0.04, 0.04);
+    playClickSoundFile();
   }, [soundEnabled]);
 
   const playSuccess = useCallback(() => {
@@ -301,11 +348,11 @@ export function GlobalAudioFeedback() {
     let lastHoveredElement: HTMLElement | null = null;
 
     const playHoverSound = () => {
-      playTone([600], 'sine', 0.05, 0.012);
+      playHoverSoundFile();
     };
 
     const playClickSound = () => {
-      playTone([1000], 'sine', 0.04, 0.04);
+      playClickSoundFile();
     };
 
     const handleMouseOver = (e: MouseEvent) => {

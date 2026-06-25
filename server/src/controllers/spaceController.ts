@@ -88,4 +88,50 @@ export class SpaceController {
       return res.status(503).json({ message: 'Stars catalog is temporarily unavailable.' });
     }
   }
+
+  static async getConstellationsBoundaries(req: Request, res: Response) {
+    try {
+      const data = await SpaceService.getConstellationsBoundaries();
+      res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=3600');
+      return res.json(data);
+    } catch (error) {
+      return res.status(503).json({ message: 'Constellation boundaries are temporarily unavailable.' });
+    }
+  }
+
+  static async getTimeline(req: Request, res: Response) {
+    try {
+      const data = await SpaceService.getTimelineEvents();
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      return res.json(data);
+    } catch (error) {
+      return res.status(503).json({ message: 'Timeline events are temporarily unavailable.' });
+    }
+  }
+
+  static async getStats(req: Request, res: Response) {
+    try {
+      const lat = parseFloat(req.query.latitude as string) || 0;
+      const lng = parseFloat(req.query.longitude as string) || 0;
+      const dateStr = (req.query.date as string) || new Date().toISOString();
+      const data = await SpaceService.getAstronomyStats(lat, lng, dateStr);
+      res.setHeader('Cache-Control', 'public, max-age=180, stale-while-revalidate=60');
+      return res.json(data);
+    } catch (error) {
+      return res.status(503).json({ message: 'Astronomy stats are temporarily unavailable.' });
+    }
+  }
+
+  static async getPlanets(req: Request, res: Response) {
+    try {
+      const lat = parseFloat(req.query.latitude as string) || 0;
+      const lng = parseFloat(req.query.longitude as string) || 0;
+      const dateStr = (req.query.date as string) || new Date().toISOString();
+      const data = await SpaceService.getPlanetsData(lat, lng, dateStr);
+      res.setHeader('Cache-Control', 'public, max-age=900, stale-while-revalidate=300');
+      return res.json(data);
+    } catch (error) {
+      return res.status(503).json({ message: 'Planets data is temporarily unavailable.' });
+    }
+  }
 }

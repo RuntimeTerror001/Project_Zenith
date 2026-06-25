@@ -10,6 +10,7 @@ import { FavoritesController } from './controllers/favoritesController';
 import { SearchController } from './controllers/searchController';
 import { NotificationController } from './controllers/notificationController';
 import { SpaceController } from './controllers/spaceController';
+import { SettingsController } from './controllers/settingsController';
 import { initWebSocketServer } from './websocket';
 import { SpaceService } from './services/spaceService';
 
@@ -36,7 +37,15 @@ app.get('/api/news', SpaceController.getNews);
 app.get('/api/events', SpaceController.getEvents);
 app.get('/api/satellites', SpaceController.getSatellites);
 app.get('/api/constellations', SpaceController.getConstellations);
+app.get('/api/constellations/boundaries', SpaceController.getConstellationsBoundaries);
 app.get('/api/stars', SpaceController.getStars);
+app.get('/api/timeline', SpaceController.getTimeline);
+app.get('/api/stats', SpaceController.getStats);
+app.get('/api/planets', SpaceController.getPlanets);
+
+// User Settings Routes
+app.get('/api/settings', requireAuth, SettingsController.getSettings);
+app.patch('/api/settings', requireAuth, SettingsController.updateSettings);
 
 // Authentication Routes
 app.post('/api/auth/register', authLimiter, AuthController.register);

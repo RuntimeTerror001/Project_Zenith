@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Volume2, VolumeX, Maximize } from 'lucide-react';
 import { useZenithStore } from '@/store/zenith-store';
+import { useIssPosition, useAstronomyStats } from '@/hooks/use-astronomy-queries';
+import { formatDistance, formatSpeed } from '@/utils/utils';
 
 function CosmicCanvas({ width, height }: { width: number; height: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -225,9 +227,22 @@ function CosmicCanvas({ width, height }: { width: number; height: number }) {
 }
 
 export function CosmicMode() {
-  const { mode, setMode, soundEnabled, toggleSound, music } = useZenithStore();
+  const { mode, setMode, soundEnabled, toggleSound, music, location, currentDate } = useZenithStore();
   const isActive = mode === 'cosmic';
   const setIsActive = (active: boolean) => setMode(active ? 'cosmic' : 'live');
+
+  const { data: issData } = useIssPosition();
+  const { data: stats } = useAstronomyStats(location.lat, location.lng, currentDate.toISOString());
+
+  const issAltitude = issData?.altitude ? formatDistance(issData.altitude) : '408.00 km';
+  const issSpeed = issData?.velocity ? formatSpeed(issData.velocity / 3600) : '7.66 km/s';
+  const activeSats = stats?.totalSatellites ? `${stats.totalSatellites.toLocaleString()}+` : '9,000+';
+
+  const statsList = [
+    { label: 'ISS Altitude', value: issAltitude },
+    { label: 'Orbital Speed', value: issSpeed },
+    { label: 'Active Sats', value: activeSats },
+  ];
   const [size, setSize] = useState({ w: 0, h: 0 });
 
   useEffect(() => {
@@ -308,11 +323,7 @@ export function CosmicMode() {
               transition={{ delay: 0.8 }}
               className="absolute top-8 right-8 space-y-2"
             >
-              {[
-                { label: 'ISS Altitude', value: '408 km' },
-                { label: 'Orbital Speed', value: '7.66 km/s' },
-                { label: 'Active Sats', value: '9,000+' },
-              ].map((s) => (
+              {statsList.map((s) => (
                 <div key={s.label} className="px-4 py-2 rounded-xl text-right" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)' }}>
                   <div className="text-xs text-white/30">{s.label}</div>
                   <div className="text-sm font-bold text-cyan-400">{s.value}</div>

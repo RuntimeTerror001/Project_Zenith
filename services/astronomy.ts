@@ -73,4 +73,31 @@ export const astronomyService = {
   getNotifications: () => request<any[]>('/api/notifications', 'GET'),
   markNotificationRead: (id: string) => request<any>(`/api/notifications/${id}`, 'PATCH'),
   clearNotifications: () => request<any>('/api/notifications', 'DELETE'),
+
+  // Settings APIs
+  getSettings: () => request<any>('/api/settings', 'GET'),
+  updateSettings: (body: any) => request<any>('/api/settings', 'PATCH', body),
+
+  // Timeline APIs
+  getTimeline: (signal?: AbortSignal) => request<any[]>('/api/timeline', 'GET', undefined, signal),
+
+  // Stats API
+  getStats: (latitude: number, longitude: number, date?: string, signal?: AbortSignal) => {
+    const query = new URLSearchParams({
+      latitude: latitude.toString(),
+      longitude: longitude.toString(),
+      ...(date ? { date } : {})
+    });
+    return request<any>(`/api/stats?${query.toString()}`, 'GET', undefined, signal);
+  },
+
+  // Planets API
+  getPlanets: (latitude: number, longitude: number, date?: string, signal?: AbortSignal) => {
+    const query = new URLSearchParams({
+      latitude: latitude.toString(),
+      longitude: longitude.toString(),
+      ...(date ? { date } : {})
+    });
+    return request<any[]>(`/api/planets?${query.toString()}`, 'GET', undefined, signal);
+  },
 };

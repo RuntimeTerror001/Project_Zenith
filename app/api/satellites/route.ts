@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // In-memory cache
 let cachedData: any[] | null = null;
@@ -48,7 +50,23 @@ export async function GET() {
 
     return NextResponse.json(parsed);
   } catch (error: any) {
-    console.error('Error loading satellites:', error.message);
+    console.warn('Error loading satellites from CelesTrak, trying local fallback:', error.message);
+
+    // Try reading from local server cache file
+    try {
+      const dataFilePath = path.resolve(process.cwd(), 'server', 'data', 'satellites.json');
+      if (fs.existsSync(dataFilePath)) {
+        const fileContent = fs.readFileSync(dataFilePath, 'utf-8');
+        const parsed = JSON.parse(fileContent);
+        if (parsed && parsed.length > 0) {
+          cachedData = parsed;
+          cacheTimestamp = now;
+          return NextResponse.json(parsed);
+        }
+      }
+    } catch (fallbackError: any) {
+      console.error('Local satellites file fallback failed:', fallbackError.message);
+    }
 
     // Return cached data even if expired on error
     if (cachedData) {

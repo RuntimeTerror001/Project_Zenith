@@ -98,13 +98,16 @@ export function SkyView() {
   }, []);
 
   // Azimuthal Equidistant Projection helper centered around Zenith (Observer's straight up)
-  const getScreenCoords = (azimuth: number, elevation: number, width: number, height: number) => {
+  const getScreenCoords = (azimuth: number, elevation: number, width: number, height: number, clampBelowHorizon = false) => {
     const cx = width / 2;
     const cy = height / 2;
     const maxRadius = Math.min(width, height) * 0.42;
 
     // Zenith is at the center (elevation = 90), Horizon is at boundary (elevation = 0)
-    const r = maxRadius * (1 - elevation / 90);
+    let r = maxRadius * (1 - elevation / 90);
+    if (clampBelowHorizon && elevation < 0) {
+      r = maxRadius;
+    }
     
     // Azimuth: 0 is North (up), 90 is East (right), 180 is South (down), 270 is West (left)
     const angleRad = (azimuth - 90) * Math.PI / 180;
@@ -258,19 +261,29 @@ export function SkyView() {
     // 4. Draw Planets
     if (viewMode === 'all' || viewMode === 'planets') {
       visiblePlanets.forEach((p) => {
-        if (p.visible) {
-          const coords = getScreenCoords(p.azimuth, p.elevation, dimensions.width, dimensions.height);
-          ctx.beginPath();
-          ctx.arc(coords.x, coords.y, 6, 0, Math.PI * 2);
-          ctx.fillStyle = p.color;
-          ctx.fill();
-
-          ctx.beginPath();
-          ctx.arc(coords.x, coords.y, 11, 0, Math.PI * 2);
-          ctx.strokeStyle = `${p.color}40`;
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
+        const coords = getScreenCoords(p.azimuth, p.elevation, dimensions.width, dimensions.height, true);
+        const isAboveHorizon = p.elevation > 0;
+        
+        ctx.save();
+        if (!isAboveHorizon) {
+          ctx.globalAlpha = 0.35;
         }
+
+        ctx.beginPath();
+        ctx.arc(coords.x, coords.y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(coords.x, coords.y, 11, 0, Math.PI * 2);
+        if (!isAboveHorizon) {
+          ctx.setLineDash([2, 2]);
+        }
+        ctx.strokeStyle = `${p.color}40`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        
+        ctx.restore();
       });
     }
 
@@ -316,8 +329,8 @@ export function SkyView() {
         {/* Planets */}
         {(viewMode === 'all' || viewMode === 'planets') &&
           visiblePlanets.map((p) => {
-            if (!p.visible) return null;
-            const coords = getScreenCoords(p.azimuth, p.elevation, dimensions.width, dimensions.height);
+            const coords = getScreenCoords(p.azimuth, p.elevation, dimensions.width, dimensions.height, true);
+            const isAboveHorizon = p.elevation > 0;
             return (
               <button
                 key={p.id}
@@ -326,8 +339,13 @@ export function SkyView() {
                 style={{ left: coords.x, top: coords.y }}
               >
                 <div className="w-4 h-4 rounded-full flex items-center justify-center transition-all group-hover:scale-150" />
-                <span className="text-[10px] text-white/70 font-semibold mt-1 px-1.5 py-0.5 rounded bg-black/45 backdrop-blur-sm border border-white/5 opacity-50 group-hover:opacity-100 transition-opacity">
-                  {p.name} {p.symbol}
+                <span className={cn(
+                  "text-[10px] font-semibold mt-1 px-1.5 py-0.5 rounded bg-black/45 backdrop-blur-sm border border-white/5 transition-opacity",
+                  isAboveHorizon 
+                    ? "text-white/70 group-hover:opacity-100 opacity-50" 
+                    : "text-white/40 group-hover:opacity-85 opacity-30"
+                )}>
+                  {p.name} {p.symbol} {!isAboveHorizon && "(Below)"}
                 </span>
               </button>
             );

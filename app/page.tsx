@@ -17,6 +17,8 @@ import { Satellite, Star, Telescope, Zap } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useZenithStore } from '@/store/zenith-store';
 import { AuthModal } from '@/components/layout/auth-modal';
+import { useAstronomyStats } from '@/hooks/use-astronomy-queries';
+import { getMoonIllumination, getMoonTimes } from '@/utils/astronomy-calc';
 
 const SectionSkeleton = () => <section className="relative px-4 py-32"><div className="skeleton mx-auto h-96 max-w-6xl rounded-3xl" /></section>;
 const TimelineJourney = dynamic(() => import('@/components/zenith/timeline').then((module) => module.TimelineJourney), { loading: SectionSkeleton });
@@ -205,14 +207,33 @@ export default function Home() {
 }
 
 function QuickStatsCard() {
+  const { location, currentDate } = useZenithStore();
+  const { data: stats, isLoading } = useAstronomyStats(location.lat, location.lng, currentDate.toISOString());
+
   return (
     <div className="glass-card rounded-3xl p-6">
       <h3 className="text-lg font-bold text-white mb-5">Quick Stats</h3>
       <div className="space-y-4">
-        <StatRow label="Visible Planets" value="4" color="purple" />
-        <StatRow label="Visible Stars" value="~2000" color="cyan" />
-        <StatRow label="Satellites Overhead" value="12" color="yellow" />
-        <StatRow label="Next ISS Pass" value="2h 15m" color="green" />
+        <StatRow 
+          label="Visible Planets" 
+          value={isLoading ? "..." : (stats?.visiblePlanets?.toString() ?? "N/A")} 
+          color="purple" 
+        />
+        <StatRow 
+          label="Visible Stars" 
+          value={isLoading ? "..." : `~${stats?.visibleStars ?? "N/A"}`} 
+          color="cyan" 
+        />
+        <StatRow 
+          label="Satellites Overhead" 
+          value={isLoading ? "..." : (stats?.satellitesOverhead?.toString() ?? "N/A")} 
+          color="yellow" 
+        />
+        <StatRow 
+          label="Next ISS Pass" 
+          value={isLoading ? "..." : (stats?.nextIssPass ?? "N/A")} 
+          color="green" 
+        />
       </div>
     </div>
   );
@@ -233,7 +254,33 @@ function StatRow({ label, value, color }: { label: string; value: string; color:
   );
 }
 
+function getMoonPhaseName(phase: number): string {
+  if (phase < 0.03 || phase > 0.97) return 'New Moon';
+  if (phase >= 0.03 && phase < 0.22) return 'Waxing Crescent';
+  if (phase >= 0.22 && phase < 0.28) return 'First Quarter';
+  if (phase >= 0.28 && phase < 0.47) return 'Waxing Gibbous';
+  if (phase >= 0.47 && phase < 0.53) return 'Full Moon';
+  if (phase >= 0.53 && phase < 0.72) return 'Waning Gibbous';
+  if (phase >= 0.72 && phase < 0.78) return 'Third Quarter';
+  return 'Waning Crescent';
+}
+
 function MoonPhaseCard() {
+  const { location, currentDate } = useZenithStore();
+  const moonIllum = getMoonIllumination(currentDate);
+  const moonTimes = getMoonTimes(currentDate, location.lat, location.lng);
+  
+  const phaseName = getMoonPhaseName(moonIllum.phase);
+  const illuminationPct = Math.round(moonIllum.fraction * 100);
+  
+  const formatTime = (date?: Date) => {
+    if (!date) return 'N/A';
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+  
+  const riseStr = formatTime(moonTimes.rise);
+  const setStr = formatTime(moonTimes.set);
+
   return (
     <div className="glass-card rounded-3xl p-6">
       <h3 className="text-lg font-bold text-white mb-5">Moon Phase</h3>
@@ -247,18 +294,18 @@ function MoonPhaseCard() {
           <div className="absolute inset-0 rounded-full" style={{ boxShadow: '0 0 20px rgba(255,220,100,0.3)' }} />
         </div>
         <div>
-          <div className="text-xl font-bold text-white">First Quarter</div>
-          <div className="text-sm text-white/40">51% Illuminated</div>
+          <div className="text-xl font-bold text-white">{phaseName}</div>
+          <div className="text-sm text-white/40">{illuminationPct}% Illuminated</div>
         </div>
       </div>
       <div className="mt-5 grid grid-cols-2 gap-2 text-xs">
         <div className="p-3 rounded-xl bg-white/5">
           <div className="text-white/40 mb-1">Rise</div>
-          <div className="text-white font-medium text-sm">12:32 PM</div>
+          <div className="text-white font-medium text-sm">{riseStr}</div>
         </div>
         <div className="p-3 rounded-xl bg-white/5">
           <div className="text-white/40 mb-1">Set</div>
-          <div className="text-white font-medium text-sm">1:15 AM</div>
+          <div className="text-white font-medium text-sm">{setStr}</div>
         </div>
       </div>
     </div>

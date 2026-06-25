@@ -1,0 +1,86 @@
+[
+  {
+    "year": 1969,
+    "title": "Apollo 11",
+    "subtitle": "First Moon Landing",
+    "icon": "Moon",
+    "color": "#f4d59e",
+    "description": "On July 20, 1969, astronauts Neil Armstrong and Buzz Aldrin became the first humans to walk on the Moon, marking a monumental achievement in human history.",
+    "image": "https://images-assets.nasa.gov/image/as11-40-5875/as11-40-5875~orig.jpg",
+    "facts": ["612 kg of Moon rocks collected", "3 crew: Armstrong, Aldrin, Collins", "8 days total mission duration"],
+    "celestial": "Moon at closest approach (perigee) — 356,500 km",
+    "category": "Historic"
+  },
+  {
+    "year": 1977,
+    "title": "Voyager 1",
+    "subtitle": "Interstellar Messenger",
+    "icon": "Globe",
+    "color": "#a5c7f7",
+    "description": "Launched to explore the outer Solar System, Voyager 1 became the first human-made object to enter interstellar space, carrying the Golden Record message to potential alien civilizations.",
+    "image": "https://images-assets.nasa.gov/image/PIA17049/PIA17049~orig.jpg",
+    "facts": ["Carries the Golden Record message", "First spacecraft in interstellar space", "Furthest human-made object from Earth"],
+    "celestial": "Heliosphere boundary crossed at 121 AU from the Sun",
+    "category": "Historic"
+  },
+  {
+    "year": 1990,
+    "title": "Hubble Telescope",
+    "subtitle": "Eyes of Humanity",
+    "icon": "Telescope",
+    "color": "#6b93d6",
+    "description": "The Hubble Space Telescope launched into low Earth orbit and has since transformed our understanding of the universe, capturing deep-field images of billions of galaxies.",
+    "image": "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001591/GSFC_20171208_Archive_e001591~orig.jpg",
+    "facts": ["1.3 million observations made", "600 km orbit altitude", "13.7 billion ly deepest view"],
+    "celestial": "Orbiting at 547 km — crossing your sky every 97 minutes",
+    "category": "Milestone"
+  },
+  {
+    "year": 2021,
+    "title": "James Webb Telescope (JWST)",
+    "subtitle": "Infrared Space Observatory",
+    "icon": "Telescope",
+    "color": "#ffdd00",
+    "description": "Launched to succeed Hubble, the James Webb Space Telescope uses infrared sensors to peer through cosmic dust to view the first stars and galaxies formed in the universe.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/bf/Webb%27s_First_Deep_Field.jpg",
+    "facts": ["6.5m gold-coated primary mirror", "Orbits at Sun-Earth Lagrange Point 2 (L2)", "Infrared sensors view first stars & galaxies"],
+    "celestial": "1.5 million km from Earth — cooler than -223°C to detect faint heat",
+    "category": "Milestone"
+  },
+  {
+    "year": 2023,
+    "title": "Chandrayaan-3",
+    "subtitle": "India on the Moon",
+    "icon": "Rocket",
+    "color": "#ff9933",
+    "description": "India's Chandrayaan-3 successfully soft-landed near the Moon's south pole on August 23, 2023, making India the first nation to land in this resource-rich polar region.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Chandrayaan-3_Integrated_Module_in_clean-room_01.webp",
+    "facts": ["Moon south pole first landing", "Vikram lander + Pragyan rover", "14 Earth days mission life"],
+    "celestial": "Moon south pole — permanently shadowed craters hide ancient ice",
+    "category": "Historic"
+  },
+  {
+    "year": 2026,
+    "title": "Present Day: Project Zenith",
+    "subtitle": "Connecting Earth and Sky",
+    "icon": "Globe",
+    "color": "#10b981",
+    "description": "Project Zenith goes live in 2026, providing real-time telemetry, 3D orbits visualization, local astronomical look-angles, and full integration of astronomical data feeds.",
+    "image": "https://images-assets.nasa.gov/image/PIA18033/PIA18033~orig.jpg",
+    "facts": ["Real-time satellite & ISS propagation", "Full sky chart azimuthal projection", "AI space-bridge assistant"],
+    "celestial": "Continuous live connection to outer space networks",
+    "category": "Present"
+  },
+  {
+    "year": 2028,
+    "title": "Artemis & Beyond",
+    "subtitle": "Multiplanetary Future",
+    "icon": "Star",
+    "color": "#00e5ff",
+    "description": "NASA's Artemis program plans to establish a sustainable human presence on the Moon as a stepping stone for future crewed exploration of Mars.",
+    "image": "https://images-assets.nasa.gov/image/NHQ202211160021/NHQ202211160021~orig.jpg",
+    "facts": ["Land first woman and person of color on Moon", "Lunar Gateway space station foundation", "Preparing for human exploration of Mars"],
+    "celestial": "Establishing deep space gateway and Martian transit trajectory",
+    "category": "Future"
+  }
+]

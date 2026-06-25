@@ -4,6 +4,16 @@ import { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
 import { X, Rocket, Telescope, Moon, Globe, Star, Sun } from 'lucide-react';
 import Image from 'next/image';
+import { useTimelineEvents } from '@/hooks/use-astronomy-queries';
+
+const iconMap: Record<string, any> = {
+  Moon,
+  Globe,
+  Telescope,
+  Rocket,
+  Star,
+  Sun
+};
 
 const timelineEvents = [
   {
@@ -49,7 +59,7 @@ const timelineEvents = [
     icon: Telescope,
     color: '#ffdd00',
     description: 'Launched to succeed Hubble, the James Webb Space Telescope uses infrared sensors to peer through cosmic dust to view the first stars and galaxies formed in the universe.',
-    image: 'https://images-assets.nasa.gov/image/GSFC_20220712_JWST_001/GSFC_20220712_JWST_001~orig.jpg',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/b/bf/Webb%27s_First_Deep_Field.jpg',
     facts: ['6.5m gold-coated primary mirror', 'Orbits at Sun-Earth Lagrange Point 2 (L2)', 'Infrared sensors view first stars & galaxies'],
     celestial: '1.5 million km from Earth — cooler than -223°C to detect faint heat',
     category: 'Milestone',
@@ -61,10 +71,22 @@ const timelineEvents = [
     icon: Rocket,
     color: '#ff9933',
     description: "India's Chandrayaan-3 successfully soft-landed near the Moon's south pole on August 23, 2023, making India the first nation to land in this resource-rich polar region.",
-    image: 'https://upload.wikimedia.org/wikipedia/commons/5/5f/Chandrayaan-3_Integrated_Module_in_clean-room_01.webp',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/d/d7/Chandrayaan-3_Integrated_Module_in_clean-room_01.webp',
     facts: ['Moon south pole first landing', 'Vikram lander + Pragyan rover', '14 Earth days mission life'],
     celestial: 'Moon south pole — permanently shadowed craters hide ancient ice',
     category: 'Historic',
+  },
+  {
+    year: 2026,
+    title: 'Present Day: Project Zenith',
+    subtitle: 'Connecting Earth and Sky',
+    icon: Globe,
+    color: '#10b981',
+    description: 'Project Zenith goes live in 2026, providing real-time telemetry, 3D orbits visualization, local astronomical look-angles, and full integration of astronomical data feeds.',
+    image: 'https://images-assets.nasa.gov/image/PIA18033/PIA18033~orig.jpg',
+    facts: ['Real-time satellite & ISS propagation', 'Full sky chart azimuthal projection', 'AI space-bridge assistant'],
+    celestial: 'Continuous live connection to outer space networks',
+    category: 'Present',
   },
   {
     year: 2028,
@@ -89,7 +111,10 @@ const categoryColors: Record<string, string> = {
 };
 
 export function TimelineJourney() {
-  const [selectedEvent, setSelectedEvent] = useState<typeof timelineEvents[0] | null>(null);
+  const { data: dbEvents } = useTimelineEvents();
+  const displayEvents = dbEvents && dbEvents.length > 0 ? dbEvents : timelineEvents;
+
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
   const [lineProgress, setLineProgress] = useState(0);
@@ -153,9 +178,10 @@ export function TimelineJourney() {
         </div>
 
         <div className="max-w-5xl mx-auto space-y-12 lg:space-y-0">
-          {timelineEvents.map((event, index) => {
+          {displayEvents.map((event, index) => {
             const isLeft = index % 2 === 0;
-            const Icon = event.icon;
+            const iconName = typeof event.icon === 'string' ? event.icon : null;
+            const Icon = iconName ? (iconMap[iconName] || Star) : (event.icon || Star);
 
             return (
               <motion.div
@@ -399,7 +425,7 @@ export function TimelineJourney() {
                 <div>
                   <h4 className="text-sm font-bold text-white/50 uppercase tracking-wider mb-3">Key Facts</h4>
                   <div className="grid grid-cols-1 gap-2">
-                    {selectedEvent.facts.map((fact, i) => (
+                    {selectedEvent.facts.map((fact: string, i: number) => (
                       <motion.div
                         key={i}
                         initial={{ opacity: 0, x: -15 }}

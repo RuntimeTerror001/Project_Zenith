@@ -533,7 +533,7 @@ function SoundControls({ onClose }: { onClose?: () => void }) {
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        {['Deep Space', 'Nebula Dreams', 'Ambient Synth', 'Cosmic Piano'].map((trackName) => {
+        {['Deep Space', 'Nebula Dreams'].map((trackName) => {
           const isActive = music.track === trackName;
           return (
             <button

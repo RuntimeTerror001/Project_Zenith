@@ -251,6 +251,7 @@ export function HeroSection() {
             className="btn-primary px-8 py-4 rounded-xl flex items-center gap-2 text-white group font-semibold relative overflow-hidden"
             whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => document.getElementById('sky')?.scrollIntoView({ behavior: 'smooth' })}
           >
             <span className="relative z-10">Explore Sky</span>
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
@@ -268,6 +269,7 @@ export function HeroSection() {
             }}
             whileHover={{ scale: 1.05, y: -2, boxShadow: '0 8px 32px rgba(0, 229, 255, 0.3)' }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => document.getElementById('globe')?.scrollIntoView({ behavior: 'smooth' })}
           >
             <Play className="w-5 h-5" />
             <span>Watch Live</span>
