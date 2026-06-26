@@ -82,6 +82,8 @@
     "zustand": "^4.5.7"
   },
   "overrides": {
-    "@zip.js/zip.js": "2.7.73"
+    "@zip.js/zip.js": "2.7.73",
+    "@cesium/engine": "15.0.0",
+    "@cesium/widgets": "11.0.0"
   }
 }
