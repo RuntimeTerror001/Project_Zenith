@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "node -e \"require('fs').rmSync('dist', {recursive:true,force:true})\" && tsc",
+    "build": "node -e \"require('fs').rmSync('dist', {recursive:true,force:true})\" && tsc --ignoreDeprecations 6.0",
     "start": "node dist/server.js"
   },
   "dependencies": {
