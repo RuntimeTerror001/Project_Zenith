@@ -176,7 +176,7 @@ export default function BackgroundMusicManager() {
   }, []);
 
   return (
-    <div className="fixed z-40 bottom-8 left-8 lg:bottom-24 lg:left-8 flex flex-col items-start gap-3">
+    <div className="fixed z-40 bottom-28 left-4 sm:bottom-8 sm:left-8 lg:bottom-24 lg:left-8 flex flex-col items-start gap-3">
       <motion.div
         layout
         transition={{ type: 'spring', stiffness: 300, damping: 28 }}

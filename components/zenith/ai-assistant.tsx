@@ -118,7 +118,7 @@ export function AISpaceAssistant() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.8, opacity: 0, y: 20 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="absolute bottom-0 right-0 w-[360px] rounded-3xl overflow-hidden"
+              className="absolute bottom-0 right-0 w-[calc(100vw-2rem)] sm:w-[360px] rounded-3xl overflow-hidden"
               style={{
                 background: 'rgba(10,10,30,0.97)',
                 border: '1px solid rgba(124,58,237,0.3)',
