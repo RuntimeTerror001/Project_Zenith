@@ -22,7 +22,11 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
     let wsUrl = '';
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    const publicBackend = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+    if (publicBackend) {
+      wsUrl = publicBackend.replace(/^http/, 'ws') + '/ws';
+    } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       wsUrl = `${protocol}//localhost:5001/ws`;
     } else {
       wsUrl = `${protocol}//${window.location.host}/ws`;

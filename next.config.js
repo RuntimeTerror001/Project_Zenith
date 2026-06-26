@@ -14,7 +14,7 @@ const nextConfig = {
     ],
   },
   async rewrites() {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5001';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:5001';
     return [
       {
         // Next.js App Router API routes (e.g. /api/satellites) take precedence over rewrites.
