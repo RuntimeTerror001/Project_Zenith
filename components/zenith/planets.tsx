@@ -54,7 +54,7 @@ export function PlanetExplorer() {
         </motion.p>
       </div>
 
-      <div className="relative z-10 flex justify-center items-center max-w-4xl mx-auto" style={{ height: 520 }}>
+      <div className="relative z-10 flex justify-center items-center max-w-4xl mx-auto scale-[0.45] sm:scale-[0.75] md:scale-[0.95] lg:scale-100 origin-center transition-all duration-300" style={{ height: 520 }}>
         {/* Sun with enhanced glow */}
         <motion.div
           className="absolute z-10"
@@ -295,10 +295,10 @@ export function PlanetExplorer() {
               exit={{ scale: 0.85, opacity: 0, y: 30 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               onClick={(e) => e.stopPropagation()}
-              className="glass-card rounded-3xl overflow-hidden max-w-lg w-full"
+              className="glass-card rounded-3xl overflow-hidden max-w-lg w-full max-h-[90vh] flex flex-col"
             >
               {/* Header with planet visual */}
-              <div className="relative p-8 pb-6" style={{ background: `radial-gradient(ellipse at 80% 20%, ${selectedPlanet.color}20, transparent 60%)` }}>
+              <div className="relative p-8 pb-6 flex-shrink-0" style={{ background: `radial-gradient(ellipse at 80% 20%, ${selectedPlanet.color}20, transparent 60%)` }}>
                 <div className="absolute top-0 right-0 w-56 h-56 overflow-hidden rounded-bl-3xl pointer-events-none">
                   {/* Rotating planet in header */}
                   <motion.div
@@ -386,7 +386,9 @@ export function PlanetExplorer() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 px-6 pb-3">
+              {/* Scrollable content body */}
+              <div className="overflow-y-auto flex-1 scrollbar-none">
+                <div className="grid grid-cols-2 gap-3 px-6 pb-3">
                 {[
                   { icon: MapPin, label: 'From Sun', value: `${selectedPlanet.distanceFromSun.toLocaleString()}M km` },
                   { icon: Orbit, label: 'Orbital Period', value: `${selectedPlanet.orbitalPeriod} Earth days` },
@@ -440,6 +442,7 @@ export function PlanetExplorer() {
                     <span className="text-white/70 text-sm">{planetExtras[selectedPlanet.id].fact}</span>
                   </motion.div>
                 )}
+              </div>
               </div>
             </motion.div>
           </motion.div>

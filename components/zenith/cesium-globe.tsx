@@ -574,7 +574,7 @@ export default function CesiumGlobe() {
       )}
 
       {/* Floating Instructions HUD */}
-      <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-2 max-w-[280px]">
+      <div className="absolute bottom-4 left-4 z-10 hidden sm:flex flex-col gap-2 max-w-[280px]">
         <div className="glass rounded-xl p-3 text-[11px] text-white/60 pointer-events-none border border-white/5 space-y-1">
           <div className="font-semibold text-white/90">Controls</div>
           <div>Left Click + Drag: Rotate Earth</div>
@@ -611,7 +611,7 @@ export default function CesiumGlobe() {
 
       {/* Selected Satellite Popup Overlay */}
       {selectedSat && (
-        <div className="absolute top-4 left-4 z-10 glass-card border border-purple-500/30 max-w-sm rounded-2xl p-4 shadow-2xl backdrop-blur-lg animate-in fade-in slide-in-from-left-5 duration-300">
+        <div className="absolute top-4 left-4 right-4 md:right-auto md:max-w-sm z-10 glass-card border border-purple-500/30 rounded-2xl p-4 shadow-2xl backdrop-blur-lg animate-in fade-in slide-in-from-left-5 duration-300">
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-purple-500/20">

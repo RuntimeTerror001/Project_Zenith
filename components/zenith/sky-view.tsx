@@ -487,6 +487,13 @@ export function SkyView() {
 export function SkyObjectPanel() {
   const [activeTab, setActiveTab] = useState<'visible' | 'rising' | 'setting'>('visible');
   const { location, currentDate, setSelectedObject } = useZenithStore();
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+      setIsOpen(true);
+    }
+  }, []);
 
   const visiblePlanetsList = useMemo(() => {
     return planetData
@@ -544,7 +551,20 @@ export function SkyObjectPanel() {
   };
 
   return (
-    <div className="fixed right-0 top-[50%] -translate-y-1/2 z-40 glass-card rounded-l-2xl p-4 w-72 max-h-[70vh] overflow-hidden border-y border-l border-white/10 shadow-2xl flex flex-col">
+    <div 
+      className={cn(
+        "fixed right-0 top-[50%] -translate-y-1/2 z-40 glass-card rounded-l-2xl p-4 w-72 max-h-[70vh] border-y border-l border-white/10 shadow-2xl flex flex-col transition-transform duration-300 ease-out",
+        isOpen ? "translate-x-0" : "translate-x-full"
+      )}
+    >
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full p-2.5 rounded-l-xl bg-purple-600/90 hover:bg-purple-600 border-y border-l border-white/15 text-white shadow-lg flex items-center justify-center transition-colors"
+        style={{ minWidth: '38px' }}
+      >
+        {isOpen ? <ChevronRight className="w-4 h-4" /> : <StarIcon className="w-4 h-4 animate-pulse text-purple-200" />}
+      </button>
+
       <div className="flex items-center gap-2 mb-3">
         <StarIcon className="w-4 h-4 text-purple-400" />
         <span className="text-sm font-semibold text-white">Live Celestial Guide</span>
