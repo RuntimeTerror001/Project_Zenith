@@ -14,12 +14,13 @@ const nextConfig = {
     ],
   },
   async rewrites() {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5001';
     return [
       {
         // Next.js App Router API routes (e.g. /api/satellites) take precedence over rewrites.
         // Only unmatched /api/* routes fall through to the Express backend.
         source: '/api/:path*',
-        destination: 'http://localhost:5001/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
       },
     ];
   },
