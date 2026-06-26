@@ -116,10 +116,17 @@ cp .env.example .env
 cp server/.env.example server/.env
 ```
 
-#### Settings:
+#### Frontend Variables (`.env`):
+*   `NEXT_PUBLIC_BACKEND_URL`: URL of the deployed Express backend (e.g. `https://project-zenith-xjc5.onrender.com`, required in production for WebSockets).
+*   `BACKEND_URL`: URL of the deployed Express backend (required in production for API rewrites).
+*   `NEXT_PUBLIC_SITE_URL`: Public site domain for SEO metadata (e.g. `https://project-zenith-sigma.vercel.app`).
+*   `NASA_API_KEY`: NASA API key (defaults to `DEMO_KEY`).
+
+#### Backend Variables (`server/.env`):
 *   `MONGO_URI`: MongoDB connection string.
-*   `JWT_SECRET`: Random hash key for authentication tokens.
-*   `NASA_API_KEY`: NASA portal key (defaults to `DEMO_KEY`).
+*   `JWT_SECRET`: Secret key for authentication tokens.
+*   `NASA_API_KEY`: NASA API key (defaults to `DEMO_KEY`).
+*   `PORT`: Port on which the backend server will run (defaults to `5001`).
 
 ### 3. Run Backend Express Server
 ```bash
