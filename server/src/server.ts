@@ -22,8 +22,12 @@ const port = process.env.PORT || 5001;
 
 // Setup Middlewares
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', process.env.CLIENT_URL].filter(Boolean) as string[],
-  credentials: true
+  origin: [
+    'http://localhost:3000',
+    'https://project-zenith.vercel.app',
+    /https:\/\/project-zenith.*\.vercel\.app$/,
+  ],
+  credentials: true,
 }));
 app.use(express.json());
 
